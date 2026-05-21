@@ -33,64 +33,7 @@ function RotasOperacao({
 }) {
   return (
     <>
-      <div className="barra-acoes-rota">
-        <input
-          type="text"
-          className="input-busca-rota"
-          placeholder="Buscar cliente para adicionar..."
-          value={buscaClienteRota}
-          onChange={(e) => setBuscaClienteRota(e.target.value)}
-        />
-
-        {rotaSelecionada.status === "ABERTA" && (
-          <button type="button" onClick={() => fecharRota(rotaSelecionada)}>
-            <Lock size={16} />
-            Fechar rota
-          </button>
-        )}
-
-        {rotaSelecionada.status === "ABERTA" && (
-          <div className="grupo-botoes-rota">
-            {!modoReordenar ? (
-              <button
-                type="button"
-                className="btn-rota-acao"
-                onClick={() => setModoReordenar(true)}
-              >
-                <ArrowUpDown size={16} />
-                Reordenar rota
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn-rota-acao"
-                onClick={() => setModoReordenar(false)}
-              >
-                <ArrowUpDown size={16} />
-                Finalizar reordenação
-              </button>
-            )}
-
-            <button
-              type="button"
-              className={abaRota === "operacao" ? "aba-rota ativa" : "aba-rota"}
-              onClick={() => setAbaRota("operacao")}
-            >
-              <ClipboardList size={16} />
-              Operação
-            </button>
-
-            <button
-              type="button"
-              className={abaRota === "manutencao" ? "aba-rota ativa" : "aba-rota"}
-              onClick={() => setAbaRota("manutencao")}
-            >
-              <Wrench size={16} />
-              Manutenção
-            </button>
-          </div>
-        )}
-      </div>
+      
 
       {buscaClienteRota.trim() !== "" && (
         <div className="grid-clientes">

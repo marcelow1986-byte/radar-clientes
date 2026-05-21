@@ -16,6 +16,7 @@ Wrench
 import RotasLista from "./RotasLista.jsx";
 import RotasTopoDetalhe from "./RotasTopoDetalhe.jsx";
 import RotasOperacao from "./RotasOperacao.jsx";
+import RotasManutencao from "./RotasManutencao.jsx";
 
 function Rotas({
   rotas,
@@ -158,6 +159,59 @@ const percentualConcluido =
             </div>
           )}
 
+          <div className="barra-acoes-rota">
+  <input
+    type="text"
+    className="input-busca-rota"
+    placeholder="Buscar cliente para adicionar..."
+    value={buscaClienteRota}
+    onChange={(e) => setBuscaClienteRota(e.target.value)}
+  />
+
+  {rotaSelecionada.status === "ABERTA" && (
+    <button type="button" onClick={() => fecharRota(rotaSelecionada)}>
+      <Lock size={16} />
+      Fechar rota
+    </button>
+  )}
+
+  {(rotaSelecionada.status === "FECHADA" ||
+    rotaSelecionada.status === "FINALIZADA") && (
+    <button type="button" onClick={() => reabrirRota(rotaSelecionada)}>
+      <Lock size={16} />
+      Reabrir rota
+    </button>
+  )}
+
+  <div className="grupo-botoes-rota">
+    <button
+  type="button"
+  className="btn-rota-acao"
+  onClick={() => setModoReordenar(!modoReordenar)}
+>
+  <ArrowUpDown size={16} />
+  {modoReordenar ? "Finalizar reordenação" : "Reordenar rota"}
+</button>
+    <button
+      type="button"
+      className={abaRota === "operacao" ? "aba-rota ativa" : "aba-rota"}
+      onClick={() => setAbaRota("operacao")}
+    >
+      <ClipboardList size={16} />
+      Operação
+    </button>
+
+    <button
+      type="button"
+      className={abaRota === "manutencao" ? "aba-rota ativa" : "aba-rota"}
+      onClick={() => setAbaRota("manutencao")}
+    >
+      <Wrench size={16} />
+      Manutenção
+    </button>
+  </div>
+</div>
+
 {abaRota === "operacao" && (
   <RotasOperacao
     rotaSelecionada={rotaSelecionada}
@@ -187,6 +241,19 @@ const percentualConcluido =
   />
 
 )}
+
+{abaRota === "manutencao" && (
+  <RotasManutencao
+    clientesDaRota={clientesDaRota}
+    rotaSelecionada={rotaSelecionada}
+    buscarCliente={buscarCliente}
+    modoReordenar={modoReordenar}
+    alterarSequenciaClienteRota={alterarSequenciaClienteRota}
+    alterarStatusClienteRota={alterarStatusClienteRota}
+    abrirMaps={abrirMaps}
+    removerClienteDaRota={removerClienteDaRota}
+  />
+)} 
   </>
 )}
 
@@ -228,13 +295,15 @@ const percentualConcluido =
               </span>
             </div>
 
-            <button
-              type="button"
-              className="btn-mini-status remover"
-              onClick={() => removerClienteDaRota(item)}
-            >
-              Remover
-            </button>
+            {rotaSelecionada.status === "ABERTA" && (
+  <button
+    type="button"
+    className="btn-mini-status remover"
+    onClick={() => removerClienteDaRota(item)}
+  >
+    Remover
+  </button>
+)}
           </div>
         );
       })}
@@ -313,130 +382,7 @@ const percentualConcluido =
 )}
       
          
-{abaRota === "manutencao" && (
-  <div className="painel-manutencao">
-    <h2>Manutenção da Rota</h2>
-<div className="lista-manutencao">
 
-  {clientesDaRota.map((item) => {
-    const cliente = buscarCliente(item);
-
-    return (
-      <div
-        className="card-manutencao"
-        key={item.id}
-      >
-
-        <div className="card-manutencao-topo">
-
-         <div className="card-manutencao-seq">
-  {modoReordenar ? (
-    <input
-      type="text"
-      inputMode="numeric"
-      className="input-sequencia-mini"
-      value={item.sequencia || ""}
-      onFocus={(e) => e.target.select()}
-      onChange={(e) =>
-        alterarSequenciaClienteRota(item, e.target.value)
-      }
-    />
-  ) : (
-    item.sequencia || "-"
-  )}
-</div>
-
-          <div className="card-manutencao-info">
-
-            <h3>
-              {cliente?.cliente}
-            </h3>
-
-            <p>
-              <strong>Cidade:</strong>
-              {" "}
-              {cliente?.cidade} / {cliente?.uf}
-            </p>
-
-            <p>
-              <strong>Status:</strong>
-              {" "}
-              {item.status || "PENDENTE"}
-            </p>
-
-          </div>
-
-        </div>
-
-        <div className="card-manutencao-acoes">
-
-          <button
-            type="button"
-            className="btn-mini-status pendente"
-            onClick={() =>
-              alterarStatusClienteRota(
-                item,
-                "PENDENTE"
-              )
-            }
-          >
-            Pendente
-          </button>
-
-          <button
-            type="button"
-            className="btn-mini-status visitado"
-            onClick={() =>
-              alterarStatusClienteRota(
-                item,
-                "VISITADO"
-              )
-            }
-          >
-            Visitado
-          </button>
-
-          <button
-            type="button"
-            className="btn-mini-status cancelado"
-            onClick={() =>
-              alterarStatusClienteRota(
-                item,
-                "CANCELADO"
-              )
-            }
-          >
-            Cancelado
-          </button>
-
-          <button
-            type="button"
-            className="btn-mini-status mapa"
-            onClick={() =>
-              abrirMaps(cliente)
-            }
-          >
-            Waze
-          </button>
-
-          {rotaSelecionada.status === "ABERTA" && (
-  <button
-    type="button"
-    className="btn-mini-status remover"
-    onClick={() => removerClienteDaRota(item)}
-  >
-    Remover
-  </button>
-)}
-
-        </div>
-      </div>
-    );
-  })}
-
-</div>
-</div>
-)}   
   </>
 )}
     </section>
