@@ -50,28 +50,8 @@ function RotasTopoDetalhe({
       </div>
 
       <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          alignItems: "center",
-          marginBottom: "18px",
-          marginTop: "10px",
-        }}
       >
-        {(rotaSelecionada.status === "FECHADA" ||
-          rotaSelecionada.status === "FINALIZADA") &&
-          (perfil?.tipo_perfil === "admin" ||
-            rotaSelecionada.criado_por === usuarioId) && (
-            <button
-              type="button"
-              onClick={() => reabrirRota(rotaSelecionada)}
-            >
-              Reabrir rota
-            </button>
-          )}
-
+       
         {rotaSelecionada.status === "EM_ANDAMENTO" && (
           <button
             type="button"

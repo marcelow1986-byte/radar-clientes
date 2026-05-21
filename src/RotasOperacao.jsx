@@ -29,6 +29,7 @@ function RotasOperacao({
   alterarStatusClienteRota,
   abrirMaps,
   abrirAcompanhamento,
+  reabrirRota,
 }) {
   return (
     <>

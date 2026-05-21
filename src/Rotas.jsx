@@ -13,6 +13,8 @@ ArrowUpDown,
 ClipboardList,
 Wrench
 } from "lucide-react";
+import RotasLista from "./RotasLista.jsx";
+import RotasTopoDetalhe from "./RotasTopoDetalhe.jsx";
 
 function Rotas({
   rotas,
@@ -89,144 +91,32 @@ const percentualConcluido =
 
 
   return (
-    <section className="painel">
-      {!rotaSelecionada ? (
-        <>
-          <h2>Rotas</h2>
-
-          <div className="form-rota">
-            <input
-              type="text"
-              placeholder="Nome da rota"
-              value={nomeNovaRota}
-              onChange={(e) => setNomeNovaRota(e.target.value)}
-            />
-
-            <button type="button" onClick={criarRota}>
-              Criar rota
-            </button>
-          </div>
-
-<h2 className="titulo-proximos-clientes">
-  Próximos Clientes
-</h2>
-
-          <div className="grid-clientes">
-            {rotas.map((rota) => (
-              <div className="card-cliente card-rota-modelo-cliente" key={rota.id}>
-                <h3>{rota.nome}</h3>
-
-                
-
-                <p><strong>Status:</strong> {rota.status}</p>
-                <p><strong>Data:</strong> {rota.data_rota || "-"}</p>
-                <p><strong>Clientes:</strong> {rota.total_clientes || 0}</p>
-                <p><strong>Visitados:</strong> {rota.total_visitados || 0}</p>
-                <p><strong>Pendentes:</strong> {rota.total_pendentes || 0}</p>
-                <p><strong>Cancelados:</strong> {rota.total_cancelados || 0}</p>
-
-                <div className="acoes">
-
-  <button
-  type="button"
-  onClick={() => {
-    setAbaRota("operacao");
-    abrirRota(rota);
-    setModoTelaRota("execucao");
-  }}
->
-  Executar
-</button>
-
-  <button
-    type="button"
-    onClick={() => abrirRotaCompleta(rota)}
-  >
-    Mapa Completo
-  </button>
-
-  <button
-    type="button"
-    onClick={() => {
-      abrirRota(rota);
-      setModoTelaRota("planejamento");
-    }}
-  >
-    Planejar
-  </button>
-
-<button
-                  type="button"
-                  className="botao-lixeira"
-                  onClick={() => excluirRota(rota)}
-                >
-                  🗑️
-                </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+  <section className="painel">
+    {!rotaSelecionada ? (
+      <RotasLista
+  rotas={rotas}
+  nomeNovaRota={nomeNovaRota}
+  setNomeNovaRota={setNomeNovaRota}
+  criarRota={criarRota}
+  abrirRota={abrirRota}
+  abrirRotaCompleta={abrirRotaCompleta}
+  excluirRota={excluirRota}
+  setAbaRota={setAbaRota}
+  setModoTelaRota={setModoTelaRota}
+/>
       ) : (
         <>
-          <div className="topo-detalhe-rota">
-  <button
-    type="button"
-    className="btn-voltar-rota"
-    onClick={() => {
-  abrirRota(null);
-  setModoTelaRota("lista");
-}}
-  >
-    ← Voltar para rotas
-  </button>
+        <RotasTopoDetalhe
+  rotaSelecionada={rotaSelecionada}
+  clientesDaRota={clientesDaRota}
+  abrirRota={abrirRota}
+  setModoTelaRota={setModoTelaRota}
+  perfil={perfil}
+  usuarioId={usuarioId}
+  reabrirRota={reabrirRota}
+  finalizarRota={finalizarRota}
+/>  
 
-  <div className="info-topo-rota">
-    <div className="info-rota-box">
-      <strong>{rotaSelecionada.data_rota || "25/05/2026"}</strong>
-      <span>Data da Rota</span>
-    </div>
-
-    <div className="info-rota-box">
-      <strong className={`status-rota-topo status-${rotaSelecionada.status}`}>
-        ● {rotaSelecionada.status}
-      </strong>
-      <span>Status da Rota</span>
-    </div>
-
-    <div className="info-rota-box">
-      <strong>{clientesDaRota.length}</strong>
-      <span>Total de clientes</span>
-    </div>
-  </div>
-</div>
-
-<div
-  style={{
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: "18px",
-    marginTop: "10px",
-  }}
->
-  {(rotaSelecionada.status === "FECHADA" ||
-  rotaSelecionada.status === "FINALIZADA") &&
-  (perfil?.tipo_perfil === "admin" ||
-    rotaSelecionada.criado_por === usuarioId) && (
-    <button type="button" onClick={() => reabrirRota(rotaSelecionada)}>
-      Reabrir rota
-    </button>
-  )}
-
-  {rotaSelecionada.status === "EM_ANDAMENTO" && (
-    <button type="button" onClick={() => finalizarRota(rotaSelecionada)}>
-      Finalizar rota
-    </button>
-  )}
-</div>
 
           {rotaSelecionada.observacao && (
   <div className="historico-rota">
@@ -247,13 +137,22 @@ const percentualConcluido =
   />
 
   {rotaSelecionada.status === "ABERTA" && (
-    <button type="button" onClick={() => fecharRota(rotaSelecionada)}>
-      <>
-  <Lock size={16} />
-  Fechar rota
-</>
-    </button>
-  )}
+  <button type="button" onClick={() => fecharRota(rotaSelecionada)}>
+    <Lock size={16} />
+    Fechar rota
+  </button>
+)}
+
+{(rotaSelecionada.status === "FECHADA" ||
+  rotaSelecionada.status === "FINALIZADA") && (
+  <button
+    type="button"
+    onClick={() => reabrirRota(rotaSelecionada)}
+  >
+    <Lock size={16} />
+    Reabrir rota
+  </button>
+)}
 
   {rotaSelecionada.status === "ABERTA" && (
     <>
@@ -635,6 +534,14 @@ const percentualConcluido =
           Fechar rota
         </button>
       )}
+      {(rotaSelecionada.status === "FECHADA" ||
+  rotaSelecionada.status === "FINALIZADA") &&
+  (perfil?.tipo_perfil === "admin" ||
+    rotaSelecionada.criado_por === usuarioId) && (
+    <button type="button" onClick={() => reabrirRota(rotaSelecionada)}>
+      Reabrir rota
+    </button>
+  )}
     </div>
 
     {buscaClienteRota.trim() !== "" && (
@@ -797,8 +704,8 @@ const percentualConcluido =
 
      
   </>
-)}
 
+)}
     </section>
   );
 }
