@@ -44,12 +44,12 @@ reabrirRota,
       </button>
 
       <button
-        type="button"
-        className="btn-rota-acao"
-        onClick={() => alert("Ordenação por distância será ajustada no próximo passo.")}
-      >
-        📍 Ordenar por distância
-      </button>
+  type="button"
+  className="btn-rota-acao"
+  onClick={() => ordenarRotaPorDistancia(rotaSelecionada)}
+>
+  📍 Ordenar por distância
+</button>
 
       {rotaSelecionada.status === "ABERTA" && (
   <button

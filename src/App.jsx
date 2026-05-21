@@ -1138,6 +1138,69 @@ function App() {
     await carregarRotas();
   }
 
+  async function ordenarRotaPorDistancia(rota) {
+  if (!rota) {
+    alert("Nenhuma rota selecionada.");
+    return;
+  }
+
+  if (!localizacaoUsuario) {
+    alert("Para ordenar por distância, primeiro permita a localização do navegador.");
+    return;
+  }
+
+  const itensValidos = clientesDaRota
+    .map((item) => {
+      const cliente = clientes.find((cli) => cli.id === item.cliente_id);
+
+      if (!cliente?.latitude || !cliente?.longitude) {
+        return null;
+      }
+
+      const distancia = calcularDistanciaKm(
+        localizacaoUsuario.latitude,
+        localizacaoUsuario.longitude,
+        Number(cliente.latitude),
+        Number(cliente.longitude)
+      );
+
+      return {
+        ...item,
+        distancia,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.distancia - b.distancia);
+
+  if (!itensValidos.length) {
+    alert("Nenhum cliente da rota possui coordenadas para ordenação.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "Deseja reorganizar a sequência da rota com base na distância da sua localização atual?"
+  );
+
+  if (!confirmar) return;
+
+  for (let i = 0; i < itensValidos.length; i++) {
+    const item = itensValidos[i];
+
+    const { error } = await supabase
+      .from("rota_clientes")
+      .update({ sequencia: i + 1 })
+      .eq("id", item.id);
+
+    if (error) {
+      alert("Falha ao ordenar rota: " + error.message);
+      return;
+    }
+  }
+
+  await abrirRota(rota);
+  alert("Rota ordenada por distância.");
+}
+
   async function carregarUsuariosPerfis() {
     if (perfil?.tipo_perfil !== "admin") return;
 
@@ -1822,6 +1885,7 @@ function App() {
             usuarioId={session.user.id}
             calcularDistanciaKm={calcularDistanciaKm}
             abrirAcompanhamento={abrirAcompanhamento}
+            ordenarRotaPorDistancia={ordenarRotaPorDistancia}
           />
         )}
       </main>

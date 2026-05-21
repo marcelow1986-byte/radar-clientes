@@ -45,6 +45,7 @@ finalizarRota,
 perfil,
 usuarioId,
 abrirAcompanhamento,
+ordenarRotaPorDistancia,
 }) {
   const [modoReordenar, setModoReordenar] = useState(false);
 const clienteAtual = clientesDaRota.find(
@@ -275,6 +276,7 @@ const percentualConcluido =
     reabrirRota={reabrirRota}
 perfil={perfil}
 usuarioId={usuarioId}
+ordenarRotaPorDistancia={ordenarRotaPorDistancia}
   />
 )}
 
