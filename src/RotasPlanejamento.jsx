@@ -12,6 +12,9 @@ function RotasPlanejamento({
   modoReordenar,
   setModoReordenar,
   ordenarRotaPorDistancia,
+  perfil,
+usuarioId,
+reabrirRota,
 }) {
   return (
   <div className="painel-planejamento-rota">
@@ -43,20 +46,33 @@ function RotasPlanejamento({
       <button
         type="button"
         className="btn-rota-acao"
-        onClick={ordenarRotaPorDistancia}
+        onClick={() => alert("Ordenação por distância será ajustada no próximo passo.")}
       >
         📍 Ordenar por distância
       </button>
 
       {rotaSelecionada.status === "ABERTA" && (
-        <button
-          type="button"
-          className="btn-rota-acao"
-          onClick={() => fecharRota(rotaSelecionada)}
-        >
-          Fechar rota
-        </button>
-      )}
+  <button
+    type="button"
+    className="btn-rota-acao"
+    onClick={() => fecharRota(rotaSelecionada)}
+  >
+    Fechar rota
+  </button>
+)}
+
+{(rotaSelecionada.status === "FECHADA" ||
+  rotaSelecionada.status === "FINALIZADA") &&
+  (perfil?.tipo_perfil === "admin" ||
+    rotaSelecionada.criado_por === usuarioId) && (
+    <button
+      type="button"
+      className="btn-rota-acao"
+      onClick={() => reabrirRota(rotaSelecionada)}
+    >
+      Reabrir rota
+    </button>
+)}
     </div>
 
     {buscaClienteRota.trim() !== "" && (

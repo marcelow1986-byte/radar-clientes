@@ -17,6 +17,7 @@ import RotasLista from "./RotasLista.jsx";
 import RotasTopoDetalhe from "./RotasTopoDetalhe.jsx";
 import RotasOperacao from "./RotasOperacao.jsx";
 import RotasManutencao from "./RotasManutencao.jsx";
+import RotasPlanejamento from "./RotasPlanejamento.jsx";
 
 function Rotas({
   rotas,
@@ -257,131 +258,25 @@ const percentualConcluido =
   </>
 )}
 
-
 {modoTelaRota === "planejamento" && (
-  <div className="painel-planejamento-rota">
-    <h2>Planejamento da Rota</h2>
-
-    <p>
-      Use esta área para adicionar clientes, organizar sequência e preparar a rota antes da execução.
-    </p>
-<div className="clientes-planejados-rota">
-  <h3>Clientes da Rota</h3>
-
-  {clientesDaRota.length === 0 ? (
-    <p>Nenhum cliente adicionado nesta rota.</p>
-  ) : (
-    <div className="lista-planejamento-rota">
-      {clientesDaRota.map((item) => {
-        const cliente = buscarCliente(item);
-
-        return (
-          <div className="linha-planejamento-rota" key={item.id}>
-            <input
-              type="text"
-              inputMode="numeric"
-              className="input-sequencia-mini"
-              value={item.sequencia || ""}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) =>
-                alterarSequenciaClienteRota(item, e.target.value)
-              }
-            />
-
-            <div>
-              <strong>{cliente?.cliente || "Cliente sem nome"}</strong>
-              <span>
-                {cliente?.cidade || "-"} / {cliente?.uf || "-"}
-              </span>
-            </div>
-
-            {rotaSelecionada.status === "ABERTA" && (
-  <button
-    type="button"
-    className="btn-mini-status remover"
-    onClick={() => removerClienteDaRota(item)}
-  >
-    Remover
-  </button>
+  <RotasPlanejamento
+    rotaSelecionada={rotaSelecionada}
+    clientesDaRota={clientesDaRota}
+    clientes={clientes}
+    buscaClienteRota={buscaClienteRota}
+    setBuscaClienteRota={setBuscaClienteRota}
+    buscarCliente={buscarCliente}
+    adicionarClienteNaRota={adicionarClienteNaRota}
+    removerClienteDaRota={removerClienteDaRota}
+    alterarSequenciaClienteRota={alterarSequenciaClienteRota}
+    fecharRota={fecharRota}
+    modoReordenar={modoReordenar}
+    setModoReordenar={setModoReordenar}
+    reabrirRota={reabrirRota}
+perfil={perfil}
+usuarioId={usuarioId}
+  />
 )}
-          </div>
-        );
-      })}
-    </div>
-  )}
-</div>
-
-    <div className="barra-acoes-rota">
-      <input
-        type="text"
-        className="input-busca-rota"
-        placeholder="Buscar cliente para adicionar..."
-        value={buscaClienteRota}
-        onChange={(e) => setBuscaClienteRota(e.target.value)}
-      />
-
-      {rotaSelecionada.status === "ABERTA" && (
-        <button
-          type="button"
-          className="btn-rota-acao"
-          onClick={() => setModoReordenar(!modoReordenar)}
-        >
-          Reordenar rota
-        </button>
-      )}
-
-      {rotaSelecionada.status === "ABERTA" && (
-        <button
-          type="button"
-          onClick={() => fecharRota(rotaSelecionada)}
-        >
-          Fechar rota
-        </button>
-      )}
-      {(rotaSelecionada.status === "FECHADA" ||
-  rotaSelecionada.status === "FINALIZADA") &&
-  (perfil?.tipo_perfil === "admin" ||
-    rotaSelecionada.criado_por === usuarioId) && (
-    <button type="button" onClick={() => reabrirRota(rotaSelecionada)}>
-      Reabrir rota
-    </button>
-  )}
-    </div>
-
-    {buscaClienteRota.trim() !== "" && (
-      <div className="grid-clientes">
-        {clientes
-          .filter((cliente) => {
-            const termo = buscaClienteRota.toLowerCase();
-
-            return (
-              cliente.cliente?.toLowerCase().includes(termo) ||
-              cliente.codigo_cliente?.toLowerCase().includes(termo) ||
-              cliente.cidade?.toLowerCase().includes(termo)
-            );
-          })
-          .slice(0, 20)
-          .map((cliente) => (
-            <div className="card-cliente" key={cliente.id}>
-              <h3>{cliente.cliente}</h3>
-              <p><strong>Código:</strong> {cliente.codigo_cliente}</p>
-              <p><strong>Cidade:</strong> {cliente.cidade} / {cliente.uf}</p>
-
-              <button
-                type="button"
-                onClick={() => adicionarClienteNaRota(cliente)}
-              >
-                Adicionar
-              </button>
-            </div>
-          ))}
-      </div>
-    )}
-  </div>
-  
-)}
-      
-         
 
   </>
 )}
