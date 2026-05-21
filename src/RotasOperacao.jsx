@@ -234,16 +234,15 @@ function RotasOperacao({
                     🧭 Abrir Waze
                   </button>
 				  
-				    < button
-				   className = "btn-atual-acompanhamento"
-				       onClick = {
-				       () =>
-				       abrirAcompanhamento(
-				           buscarCliente(clienteAtual))
-				   }
-				    >
-				   📋 Acompanhamento
-				   <  / button >
+				    <button
+  type="button"
+  className="btn-atual-acompanhamento"
+  onClick={() =>
+    abrirAcompanhamento(buscarCliente(clienteAtual))
+  }
+>
+  📋 Acompanhamento
+</button>
 
                   <button
                     className="btn-atual-cancelar"

@@ -1821,6 +1821,7 @@ function App() {
             perfil={perfil}
             usuarioId={session.user.id}
             calcularDistanciaKm={calcularDistanciaKm}
+            abrirAcompanhamento={abrirAcompanhamento}
           />
         )}
       </main>
