@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "./supabaseClient";
-import "./app-global.css";
+import "./App.css";
 import "./home.css";
+import Rotas from "./Rotas.jsx";
 import "./clientes.css";
 import "./login.css";
 import "./admin.css";
-import "./rotas.css";
-import Rotas from "./Rotas.jsx";
+import "./app-global.css";
 import {
   Users,
   MapPin,

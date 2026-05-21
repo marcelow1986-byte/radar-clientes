@@ -1,0 +1,1218 @@
+/* =========================================================
+   RADAR CLIENTES PHENIX — ROTAS.CSS
+   Responsável por: lista de rotas, topo da rota aberta,
+   operação, planejamento e manutenção.
+   ========================================================= */
+
+/* ===============================
+   LISTA INICIAL DE ROTAS
+   Componente: RotasLista.jsx
+   =============================== */
+
+.rotas-header-premium {
+  margin-bottom: 12px;
+}
+
+.rotas-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.rotas-header-icone {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #eef5ff;
+  color: #0057d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rotas-header-info h2 {
+  margin: 0;
+  text-align: left;
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.rotas-header-info p {
+  margin: 3px 0 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.form-rota-premium {
+  display: grid;
+  grid-template-columns: 1fr 150px;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.form-rota-premium input {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #cfe0f3;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+.form-rota-premium button {
+  height: 40px;
+  border-radius: 10px;
+  background: #0057d8;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tabela-rotas-premium {
+  border: 1px solid #d8e6f5;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.tabela-rotas-cabecalho {
+  display: grid;
+  grid-template-columns: 2.3fr 1fr 1.2fr 0.9fr 0.9fr 0.9fr 0.9fr;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: #f3f7fc;
+  border-bottom: 1px solid #dbe7f5;
+  color: #0f2d5c;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.tabela-rotas-linha {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 20px 12px 20px;
+  border-bottom: 1px solid #e5edf7;
+  background: #ffffff;
+}
+
+.tabela-rotas-linha:last-child {
+  border-bottom: none;
+}
+
+.tabela-rotas-linha-topo {
+  display: grid;
+  grid-template-columns: 2.3fr 1fr 1.2fr 0.9fr 0.9fr 0.9fr 0.9fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.rota-nome-premium {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #0057d8;
+}
+
+.rota-nome-premium svg {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 7px;
+  border-radius: 12px;
+  background: #f4f8ff;
+  color: #1457d8;
+  border: 1px solid #dbe7ff;
+  box-sizing: border-box;
+}
+
+.rota-nome-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.rota-nome-texto strong,
+.rota-nome-premium strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.rota-info-premium {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rota-info-premium svg {
+  width: 14px;
+  height: 14px;
+  color: #0f2d5c;
+}
+
+.indicador-rota strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.indicador-rota.visitados svg {
+  color: #16a34a;
+}
+
+.indicador-rota.pendentes svg {
+  color: #f97316;
+}
+
+.indicador-rota.cancelados svg {
+  color: #ef4444;
+}
+
+.badge-rota-premium {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 96px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.status-ABERTA {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+}
+
+.status-EM_ANDAMENTO {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+}
+
+.status-FECHADA {
+  background: #ffedd5 !important;
+  color: #ea580c !important;
+}
+
+.status-FINALIZADA {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+.acoes-rota-premium {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 42px;
+  gap: 8px;
+  padding-top: 8px;
+  margin-left: 48px;
+  border-top: 1px dashed #dbe7f5;
+  flex-wrap: wrap;
+}
+
+.acoes-rota-premium button {
+  height: 30px;
+  border-radius: 9px;
+  padding: 0 12px;
+  font-size: 11px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.acoes-rota-premium button svg {
+  width: 13px;
+  height: 13px;
+}
+
+.btn-rota-executar {
+  background: #0057d8 !important;
+  color: #ffffff !important;
+}
+
+.btn-rota-secundario {
+  background: #ffffff !important;
+  color: #0057d8 !important;
+  border: 1px solid #0057d8 !important;
+}
+
+.btn-rota-excluir {
+  background: #ffffff !important;
+  color: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+  width: 38px;
+  min-width: 38px;
+  padding: 0 !important;
+}
+
+/* ===============================
+   TOPO DA ROTA ABERTA
+   Componente: RotasTopoDetalhe.jsx
+   =============================== */
+
+.topo-detalhe-rota {
+  background: white;
+  border-radius: 24px;
+  padding: 22px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 22px;
+  align-items: center;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.btn-voltar-rota {
+  background: white !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 14px !important;
+  height: 48px;
+}
+
+.info-topo-rota {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.info-rota-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px;
+  text-align: center;
+}
+
+.info-rota-box strong {
+  display: block;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.info-rota-box span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.status-rota-topo.status-ABERTA {
+  color: #16a34a !important;
+}
+
+.status-rota-topo.status-FECHADA {
+  color: #2563eb !important;
+}
+
+.status-rota-topo.status-EM_ANDAMENTO {
+  color: #f59e0b !important;
+}
+
+.status-rota-topo.status-FINALIZADA {
+  color: #64748b !important;
+}
+
+.historico-rota {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  color: #0f172a;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.historico-rota span {
+  color: #334155;
+  line-height: 1.4;
+}
+
+/* ===============================
+   BARRA DE AÇÕES / ABAS
+   Componente: RotasOperacao.jsx / RotasPlanejamento.jsx
+   =============================== */
+
+.barra-acoes-rota {
+  background: white;
+  border-radius: 24px;
+  padding: 18px;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.input-busca-rota {
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  padding: 0 14px;
+  font-size: 15px;
+}
+
+.grupo-botoes-rota {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grupo-botoes-rota button,
+.barra-acoes-rota button,
+.aba-rota {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.grupo-botoes-rota svg,
+.barra-acoes-rota svg,
+.aba-rota svg {
+  flex-shrink: 0;
+}
+
+.btn-rota-acao {
+  cursor: pointer !important;
+  position: relative;
+  z-index: 5;
+}
+
+/* ===============================
+   OPERAÇÃO DA ROTA
+   Componente: RotasOperacao.jsx
+   =============================== */
+
+.layout-operacao-rota {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.coluna-esquerda-rota {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.coluna-direita-rota {
+  min-width: 0;
+}
+
+.painel-progresso-rota {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.progresso-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.progresso-topo h2 {
+  margin: 0;
+}
+
+.progresso-topo p {
+  display: none;
+}
+
+.progresso-percentual {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.barra-progresso {
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 22px;
+}
+
+.barra-progresso-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+.cards-resumo-rota {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.card-resumo-rota {
+  background: #f8fafc;
+  border-radius: 18px;
+  padding: 18px;
+  text-align: center;
+}
+
+.card-resumo-rota strong {
+  display: block;
+  font-size: 30px;
+  color: #0f172a;
+}
+
+.card-resumo-rota span {
+  color: #64748b;
+}
+
+.cabecalho-operacao-rota {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.cabecalho-operacao-rota h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 28px;
+}
+
+.cabecalho-operacao-rota p {
+  margin: 6px 0 0 0;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.status-execucao-rota {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Cliente atual */
+
+.painel-cliente-atual {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.painel-atual-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.painel-atual-header h2 {
+  margin: 0;
+  text-align: left;
+}
+
+.badge-atual {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.cliente-atual-linha {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  background: #f8fbff;
+  border: 1px solid #dbeafe;
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.cliente-atual-pin {
+  width: 86px;
+  height: 86px;
+  min-width: 86px;
+  border-radius: 20px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+}
+
+.cliente-atual-dados {
+  flex: 1;
+  text-align: left;
+}
+
+.cliente-atual-titulo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.cliente-atual-titulo h3 {
+  margin: 0;
+  font-size: 26px;
+  color: #0f172a;
+}
+
+.cliente-atual-titulo span {
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.cliente-atual-dados p {
+  margin: 7px 0 0 0;
+  color: #475569;
+  line-height: 1.35;
+}
+
+.cliente-atual-acoes-linha {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.cliente-atual-acoes-linha button {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    padding: 0 10px;
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 14px !important;
+    font-size: 14px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* Próximos clientes */
+
+.painel-proximos-clientes {
+  background: white !important;
+  border-radius: 24px !important;
+  padding: 22px !important;
+  margin-top: 24px !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08) !important;
+  text-align: left !important;
+}
+
+.proximos-clientes-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.proximos-clientes-topo h2 {
+  margin: 0;
+  text-align: left;
+}
+
+.proximos-clientes-topo span {
+  color: #64748b;
+  font-weight: 700;
+}
+
+.lista-proximos-clientes {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.linha-proximo-cliente {
+  display: grid;
+  grid-template-columns: 54px 1fr 120px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.linha-proximo-cliente:last-child {
+  border-bottom: none;
+}
+
+.linha-proximo-info h3,
+.linha-proximo-info p {
+  text-align: left !important;
+}
+
+.linha-proximo-info h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.linha-proximo-info p {
+  margin: 4px 0;
+  color: #475569;
+}
+
+.linha-proximo-info small {
+  color: #64748b;
+}
+
+.input-sequencia-mini {
+  width: 42px !important;
+  height: 36px !important;
+  border: none !important;
+  border-radius: 10px !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  color: #2563eb !important;
+  background: white !important;
+  outline: 2px solid #bfdbfe !important;
+}
+
+/* ===============================
+   PLANEJAMENTO
+   Componente: RotasPlanejamento.jsx
+   =============================== */
+
+.painel-planejamento-rota {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+}
+
+.painel-planejamento-rota h2 {
+  margin-top: 0;
+  color: #0f172a;
+}
+
+.painel-planejamento-rota p {
+  color: #64748b;
+}
+
+.clientes-planejados-rota {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.clientes-planejados-rota h3 {
+  margin: 0 0 14px 0;
+  color: #0f172a;
+}
+
+.lista-planejamento-rota {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.linha-planejamento-rota {
+  display: grid;
+  grid-template-columns: 60px 1fr 110px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.linha-planejamento-rota:last-child {
+  border-bottom: none;
+}
+
+.linha-planejamento-rota strong {
+  display: block;
+  color: #0f172a;
+}
+
+.linha-planejamento-rota span {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* ===============================
+   MANUTENÇÃO
+   Componente: RotasManutencao.jsx
+   =============================== */
+
+.painel-manutencao h2 {
+  text-align: left;
+}
+
+.lista-manutencao {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card-manutencao {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px solid #dbe4f0;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.card-manutencao-topo {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.card-manutencao-seq {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 16px;
+  background: #2563eb;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.card-manutencao-info {
+  flex: 1;
+}
+
+.card-manutencao-info h3 {
+  margin: 0 0 12px 0;
+  color: #0f172a;
+}
+
+.card-manutencao-info p {
+  margin: 6px 0;
+  color: #475569;
+}
+
+.card-manutencao-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-mini-status {
+  padding: 8px 10px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+.btn-mini-status.pendente {
+  background: #facc15 !important;
+  color: #1f2937 !important;
+}
+
+.btn-mini-status.visitado {
+  background: #16a34a !important;
+}
+
+.btn-mini-status.cancelado {
+  background: #dc2626 !important;
+}
+
+.btn-mini-status.mapa {
+  background: #2563eb !important;
+}
+
+.btn-mini-status.remover {
+  background: #be123c !important;
+}
+
+/* ===============================
+   RESPONSIVO ROTAS
+   =============================== */
+
+@media (max-width: 900px) {
+  .form-rota-premium {
+    grid-template-columns: 1fr;
+  }
+
+  .form-rota-premium input,
+  .form-rota-premium button {
+    width: 100%;
+  }
+
+  .tabela-rotas-cabecalho {
+    display: none;
+  }
+
+  .tabela-rotas-premium {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    display: grid;
+    gap: 14px;
+  }
+
+  .tabela-rotas-linha {
+    padding: 16px;
+    border: 1px solid #dbe7f5;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    margin-bottom: 14px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .tabela-rotas-linha,
+  .tabela-rotas-linha *,
+  .acoes-rota-premium,
+  .acoes-rota-premium *,
+  .indicador-rota,
+  .indicador-rota * {
+    box-sizing: border-box;
+  }
+
+  .tabela-rotas-linha-topo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .tabela-rotas-linha-topo .rota-nome-premium,
+  .tabela-rotas-linha-topo > .rota-info-premium:nth-child(2),
+  .tabela-rotas-linha-topo > div:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  .tabela-rotas-linha-topo .rota-nome-premium {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #edf2fa;
+  }
+
+  .tabela-rotas-linha-topo .rota-nome-premium > div,
+  .tabela-rotas-linha-topo .rota-nome-premium strong {
+    width: 100%;
+    text-align: center;
+  }
+
+  .tabela-rotas-linha-topo > .rota-info-premium:nth-child(2) {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .badge-rota-premium {
+    width: 100%;
+    height: 36px;
+    border-radius: 12px;
+  }
+
+  .indicador-rota {
+    width: 100%;
+    height: 48px;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    align-items: center;
+    justify-content: center;
+    column-gap: 8px;
+    padding: 0 10px;
+    background: #f5f9ff;
+    border-radius: 12px;
+  }
+
+  .indicador-rota svg {
+    width: 17px;
+    height: 17px;
+    margin: 0;
+    justify-self: center;
+  }
+
+  .indicador-rota strong {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 900;
+  }
+
+  .acoes-rota-premium {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-left: 0;
+    padding-top: 12px;
+    border-top: 1px solid #edf2fa;
+  }
+
+  .acoes-rota-premium button,
+  .acoes-rota-premium .btn-rota-excluir {
+    width: 100%;
+    min-width: 0;
+    height: 48px;
+    margin: 0;
+    padding: 0 12px !important;
+    border-radius: 10px;
+    justify-self: stretch;
+  }
+
+  .topo-detalhe-rota {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .btn-voltar-rota {
+    width: 100%;
+  }
+
+  .info-topo-rota {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .info-rota-box {
+    padding: 14px;
+  }
+
+  .info-rota-box strong {
+    font-size: 17px;
+  }
+
+  .historico-rota {
+    flex-direction: column;
+  }
+
+  .barra-acoes-rota {
+    grid-template-columns: 1fr !important;
+    padding: 16px;
+  }
+
+  .barra-acoes-rota button,
+  .input-busca-rota {
+    width: 100%;
+  }
+
+  .grupo-botoes-rota {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .grupo-botoes-rota button {
+    width: 100%;
+  }
+
+  .layout-operacao-rota {
+    grid-template-columns: 1fr;
+  }
+
+  .progresso-topo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .cards-resumo-rota {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .progresso-percentual {
+    width: 64px;
+    height: 64px;
+    font-size: 18px;
+  }
+
+  .cabecalho-operacao-rota {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .cabecalho-operacao-rota h2 {
+    font-size: 24px;
+  }
+
+  .cabecalho-operacao-rota p {
+    font-size: 15px;
+  }
+
+  .cliente-atual-linha {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 18px;
+  }
+
+  .cliente-atual-pin {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    font-size: 30px;
+  }
+
+  .cliente-atual-titulo h3 {
+    font-size: 21px;
+  }
+
+ .cliente-atual-acoes-linha {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+  .linha-proximo-cliente {
+    grid-template-columns: 42px 1fr;
+  }
+
+  .linha-proximo-status {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .painel-planejamento-rota {
+    padding: 18px;
+  }
+
+  .linha-planejamento-rota {
+    grid-template-columns: 48px 1fr;
+  }
+
+  .linha-planejamento-rota button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .card-manutencao {
+    padding: 18px;
+  }
+
+  .card-manutencao-topo {
+    flex-direction: column;
+  }
+
+  .card-manutencao-seq {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    font-size: 18px;
+  }
+
+  .card-manutencao-acoes {
+    flex-direction: column;
+  }
+
+  .card-manutencao-acoes button {
+    width: 100%;
+  }
+}
+
+.btn-atual-acompanhamento {
+    background: #1f75d6 !important;
+    color: white !important;
+    border: none !important;
+
+    padding: 0 8px !important;
+    font-size: 13px !important;
+
+    min-width: 0;
+    overflow: hidden;
+}
+
+.btn-atual-acompanhamento:hover {
+    background: #1457a8 !important;
+}
+
+.planejamento-acoes-principais {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 18px 0 22px 0;
+}
+
+.planejamento-acoes-principais button {
+  height: 44px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .planejamento-acoes-principais {
+    grid-template-columns: 1fr;
+  }
+
+  .planejamento-acoes-principais button {
+    width: 100%;
+  }
+}
+.planejamento-busca {
+  margin: 18px 0 12px 0;
+}
+
+.planejamento-busca .input-busca-rota {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.planejamento-acoes-principais {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0 0 24px 0;
+}
+
+.planejamento-acoes-principais button {
+  height: 44px;
+  border-radius: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .planejamento-acoes-principais {
+    grid-template-columns: 1fr;
+  }
+}

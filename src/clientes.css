@@ -1,0 +1,139 @@
+/* CLIENTES / PRÓXIMOS - PREMIUM */
+
+.campo-busca {
+  width: 100%;
+  height: 52px;
+  padding: 0 18px;
+  border: 1px solid #c7dcf5;
+  border-radius: 16px;
+  font-size: 15px;
+  box-sizing: border-box;
+  outline: none;
+  background: #ffffff;
+}
+
+.campo-busca:focus {
+  border-color: #0057d8;
+  box-shadow: 0 0 0 4px rgba(0, 87, 216, 0.12);
+}
+
+.acoes-filtro {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.acoes-filtro button {
+  height: 44px;
+  border-radius: 14px;
+  padding: 0 18px;
+  background: #0057d8;
+  font-weight: 800;
+}
+
+.controle-raio {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.controle-raio select {
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid #c7dcf5;
+  padding: 0 12px;
+}
+
+.grid-clientes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 22px;
+  margin-top: 26px;
+}
+
+.card-cliente {
+  background: #ffffff;
+  border: 1px solid #dbe8f8;
+  border-radius: 24px;
+  padding: 26px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  transition: 0.2s ease;
+}
+
+.card-cliente:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+}
+
+.card-cliente h3 {
+  margin: 0 0 22px 0;
+  padding: 0;
+  color: #071833;
+  font-size: 21px;
+  line-height: 1.25;
+  font-weight: 900;
+  text-align: left;
+}
+
+.card-cliente p {
+  margin: 8px 0;
+  color: #0f2442;
+  font-size: 15px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.card-cliente p strong {
+  color: #071833;
+  font-weight: 900;
+}
+
+.card-cliente .acoes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.card-cliente .acoes button {
+  height: 42px;
+  border-radius: 12px;
+  padding: 0 10px;
+  background: #1f75d6;
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.card-cliente .acoes button:hover {
+  background: #0057d8;
+}
+
+@media (max-width: 700px) {
+  .grid-clientes {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .card-cliente {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .card-cliente h3 {
+    font-size: 18px;
+  }
+
+  .card-cliente .acoes {
+    grid-template-columns: 1fr;
+  }
+
+  .card-cliente .acoes button {
+    width: 100%;
+  }
+}
