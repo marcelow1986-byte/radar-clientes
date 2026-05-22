@@ -918,33 +918,82 @@ function App() {
   }
 
   async function alterarStatusClienteRota(itemRota, novoStatus) {
-    if (!itemRota || !itemRota.id) {
-      alert("Cliente da rota não identificado.");
-      return;
-    }
+  if (!itemRota || !itemRota.id) {
+    alert("Cliente da rota não identificado.");
+    return;
+  }
 
-    const { data, error } = await supabase
-      .from("rota_clientes")
+  const { data, error } = await supabase
+    .from("rota_clientes")
+    .update({
+      status: novoStatus,
+      visitado: novoStatus === "VISITADO",
+    })
+    .eq("id", itemRota.id)
+    .select();
+
+  console.log("Status atualizado:", data);
+
+  if (error) {
+    alert("Falha ao atualizar status: " + error.message);
+    return;
+  }
+
+  const rotaId = itemRota.rota_id || rotaSelecionada?.id;
+
+  if (!rotaId) {
+    alert("Status atualizado, mas não foi possível identificar a rota.");
+    return;
+  }
+
+  const { data: itensDaRotaAtualizados, error: erroConsulta } = await supabase
+    .from("rota_clientes")
+    .select("id, status")
+    .eq("rota_id", rotaId);
+
+  if (erroConsulta) {
+    alert("Status atualizado, mas houve falha ao validar conclusão da rota.");
+    return;
+  }
+
+  const aindaTemPendente = (itensDaRotaAtualizados || []).some(
+    (linha) => linha.status === "PENDENTE" || !linha.status
+  );
+
+  if (!aindaTemPendente) {
+    const dataFinalizacao = new Date().toISOString();
+
+    const { error: erroFinalizar } = await supabase
+      .from("rotas")
       .update({
-        status: novoStatus,
-        visitado: novoStatus === "VISITADO",
+        status: "FINALIZADA",
+        finalizada_em: dataFinalizacao,
       })
-      .eq("id", itemRota.id)
-      .select();
+      .eq("id", rotaId);
 
-    console.log("Status atualizado:", data);
-
-    if (error) {
-      alert("Falha ao atualizar status: " + error.message);
+    if (erroFinalizar) {
+      alert("Clientes concluídos, mas houve falha ao finalizar a rota: " + erroFinalizar.message);
       return;
     }
 
-    if (rotaSelecionada) {
-      await abrirRota(rotaSelecionada);
-    }
+    setRotaSelecionada((rotaAtual) => ({
+      ...rotaAtual,
+      status: "FINALIZADA",
+      finalizada_em: dataFinalizacao,
+    }));
 
     await carregarRotas();
+
+    alert("Todos os clientes foram concluídos. Rota finalizada automaticamente.");
+    return;
   }
+
+  if (rotaSelecionada) {
+    await abrirRota(rotaSelecionada);
+  }
+
+  await carregarRotas();
+}
 
   async function alterarSequenciaClienteRota(itemRota, novaSequencia) {
     if (!itemRota || !itemRota.id) {
@@ -1074,34 +1123,65 @@ function App() {
     await carregarRotas();
   }
 
-  async function finalizarRota(rota) {
-    if (!rota?.id) return;
+ async function finalizarRota(rota) {
+  if (!rota?.id) return;
 
-    const confirmar = confirm("Deseja finalizar esta rota?");
+  const { data: itensRota, error: erroBusca } = await supabase
+    .from("rota_clientes")
+    .select("id, status")
+    .eq("rota_id", rota.id);
 
-    if (!confirmar) return;
-
-    const { error } = await supabase
-      .from("rotas")
-      .update({
-        status: "FINALIZADA",
-        finalizada_em: new Date().toISOString(),
-      })
-      .eq("id", rota.id);
-
-    if (error) {
-      alert("Falha ao finalizar rota: " + error.message);
-      return;
-    }
-
-    setRotaSelecionada({
-      ...rota,
-      status: "FINALIZADA",
-      finalizada_em: new Date().toISOString(),
-    });
-
-    await carregarRotas();
+  if (erroBusca) {
+    alert("Falha ao validar clientes da rota: " + erroBusca.message);
+    return;
   }
+
+  const pendentes = (itensRota || []).filter(
+    (item) => item.status === "PENDENTE" || !item.status
+  );
+
+  if (pendentes.length > 0) {
+    alert("Ainda existem clientes pendentes na rota.");
+    return;
+  }
+
+  const confirmar = confirm("Deseja finalizar esta rota?");
+
+  if (!confirmar) return;
+
+  const dataFinalizacao = new Date().toISOString();
+
+  const { error } = await supabase
+    .from("rotas")
+    .update({
+      status: "FINALIZADA",
+      finalizada_em: dataFinalizacao,
+    })
+    .eq("id", rota.id);
+    
+    console.log("Update finalizada:", {
+  rotaId: rota.id,
+  status: "FINALIZADA",
+  error,
+});
+
+  if (error) {
+    alert("Falha ao finalizar rota: " + error.message);
+    return;
+  }
+
+  const rotaFinalizada = {
+  ...rota,
+  status: "FINALIZADA",
+  finalizada_em: dataFinalizacao,
+};
+
+setRotaSelecionada(rotaFinalizada);
+
+await carregarRotas();
+
+alert("Rota finalizada com sucesso.");
+}
 
   async function reabrirRota(rota) {
     if (!rota?.id) return;
