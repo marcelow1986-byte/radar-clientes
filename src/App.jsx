@@ -917,22 +917,29 @@ function App() {
     await carregarRotas();
   }
 
-  async function alterarStatusClienteRota(itemRota, novoStatus) {
+ async function alterarStatusClienteRota(itemRota, novoStatus) {
   if (!itemRota || !itemRota.id) {
     alert("Cliente da rota não identificado.");
     return;
   }
 
-  const { data, error } = await supabase
+  if (rotaSelecionada?.status === "ABERTA") {
+    alert("Para registrar visita, primeiro feche a rota.");
+    return;
+  }
+
+  if (rotaSelecionada?.status === "FINALIZADA") {
+    alert("Rota finalizada. Para alterar clientes, reabra a rota.");
+    return;
+  }
+
+  const { error } = await supabase
     .from("rota_clientes")
     .update({
       status: novoStatus,
       visitado: novoStatus === "VISITADO",
     })
-    .eq("id", itemRota.id)
-    .select();
-
-  console.log("Status atualizado:", data);
+    .eq("id", itemRota.id);
 
   if (error) {
     alert("Falha ao atualizar status: " + error.message);
@@ -941,58 +948,65 @@ function App() {
 
   const rotaId = itemRota.rota_id || rotaSelecionada?.id;
 
-  if (!rotaId) {
-    alert("Status atualizado, mas não foi possível identificar a rota.");
-    return;
-  }
-
-  const { data: itensDaRotaAtualizados, error: erroConsulta } = await supabase
+  const { data: itensAtualizados, error: erroConsulta } = await supabase
     .from("rota_clientes")
     .select("id, status")
     .eq("rota_id", rotaId);
 
   if (erroConsulta) {
-    alert("Status atualizado, mas houve falha ao validar conclusão da rota.");
+    alert("Status atualizado, mas houve falha ao validar a rota.");
     return;
   }
 
-  const aindaTemPendente = (itensDaRotaAtualizados || []).some(
+  const temPendente = (itensAtualizados || []).some(
     (linha) => linha.status === "PENDENTE" || !linha.status
   );
 
-  if (!aindaTemPendente) {
-    const dataFinalizacao = new Date().toISOString();
+  const temMovimento = (itensAtualizados || []).some(
+    (linha) => linha.status === "VISITADO" || linha.status === "CANCELADO"
+  );
 
-    const { error: erroFinalizar } = await supabase
-      .from("rotas")
-      .update({
-        status: "FINALIZADA",
-        finalizada_em: dataFinalizacao,
-      })
-      .eq("id", rotaId);
+  let novoStatusRota = rotaSelecionada?.status || "FECHADA";
+  let dataFinalizacao = rotaSelecionada?.finalizada_em || null;
 
-    if (erroFinalizar) {
-      alert("Clientes concluídos, mas houve falha ao finalizar a rota: " + erroFinalizar.message);
-      return;
-    }
+  if (!temPendente) {
+    novoStatusRota = "FINALIZADA";
+    dataFinalizacao = new Date().toISOString();
+  } else if (temMovimento) {
+    novoStatusRota = "EM_ANDAMENTO";
+    dataFinalizacao = null;
+  } else {
+    novoStatusRota = "FECHADA";
+    dataFinalizacao = null;
+  }
 
-    setRotaSelecionada((rotaAtual) => ({
-      ...rotaAtual,
-      status: "FINALIZADA",
+  const { error: erroRota } = await supabase
+    .from("rotas")
+    .update({
+      status: novoStatusRota,
       finalizada_em: dataFinalizacao,
-    }));
+    })
+    .eq("id", rotaId);
 
-    await carregarRotas();
-
-    alert("Todos os clientes foram concluídos. Rota finalizada automaticamente.");
+  if (erroRota) {
+    alert("Status do cliente atualizado, mas houve falha ao atualizar a rota.");
     return;
   }
 
-  if (rotaSelecionada) {
-    await abrirRota(rotaSelecionada);
-  }
+  const rotaAtualizada = {
+    ...rotaSelecionada,
+    status: novoStatusRota,
+    finalizada_em: dataFinalizacao,
+  };
 
+  setRotaSelecionada(rotaAtualizada);
+
+  await abrirRota(rotaAtualizada);
   await carregarRotas();
+
+  if (novoStatusRota === "FINALIZADA") {
+    alert("Todos os clientes foram concluídos. Rota finalizada automaticamente.");
+  }
 }
 
   async function alterarSequenciaClienteRota(itemRota, novaSequencia) {
@@ -1184,39 +1198,49 @@ alert("Rota finalizada com sucesso.");
 }
 
   async function reabrirRota(rota) {
-    if (!rota?.id) return;
+  if (!rota?.id) return;
 
-    const confirmar = confirm("Deseja reabrir esta rota?");
+  const confirmar = confirm("Deseja reabrir esta rota?");
 
-    if (!confirmar) return;
+  if (!confirmar) return;
 
-    const dataHora = new Date().toLocaleString("pt-BR");
+  const dataHora = new Date().toLocaleString("pt-BR");
 
-    const novaObservacao =
-      (rota.observacao || "") +
-      `\nRota reaberta em ${dataHora} por ${perfil?.nome || "usuário"}.`;
+  const statusOrigem = rota.status || "SEM_STATUS";
 
-    const { error } = await supabase
-      .from("rotas")
-      .update({
-        status: "ABERTA",
-        observacao: novaObservacao,
-      })
-      .eq("id", rota.id);
+  const novaObservacao =
+    (rota.observacao || "") +
+    `\n[${dataHora}] Rota reaberta de ${statusOrigem} para FECHADA por ${
+      perfil?.nome || "usuário"
+    }.`;
 
-    if (error) {
-      alert("Falha ao reabrir rota: " + error.message);
-      return;
-    }
-
-    setRotaSelecionada({
-      ...rota,
-      status: "ABERTA",
+  const { error } = await supabase
+    .from("rotas")
+    .update({
+      status: "FECHADA",
       observacao: novaObservacao,
-    });
+      finalizada_em: null,
+    })
+    .eq("id", rota.id);
 
-    await carregarRotas();
+  if (error) {
+    alert("Falha ao reabrir rota: " + error.message);
+    return;
   }
+
+  const rotaReaberta = {
+    ...rota,
+    status: "FECHADA",
+    observacao: novaObservacao,
+    finalizada_em: null,
+  };
+
+  setRotaSelecionada(rotaReaberta);
+
+  await carregarRotas();
+
+  alert("Rota reaberta como FECHADA.");
+}
 
   async function ordenarRotaPorDistancia(rota) {
   if (!rota) {
