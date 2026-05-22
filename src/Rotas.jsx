@@ -186,14 +186,16 @@ const percentualConcluido =
   )}
 
   <div className="grupo-botoes-rota">
-    <button
-  type="button"
-  className="btn-rota-acao"
-  onClick={() => setModoReordenar(!modoReordenar)}
->
-  <ArrowUpDown size={16} />
-  {modoReordenar ? "Finalizar reordenação" : "Reordenar rota"}
-</button>
+    {rotaSelecionada.status !== "FINALIZADA" && (
+  <button
+    type="button"
+    className="btn-rota-acao"
+    onClick={() => setModoReordenar(!modoReordenar)}
+  >
+    <ArrowUpDown size={16} />
+    {modoReordenar ? "Finalizar reordenação" : "Reordenar rota"}
+  </button>
+)}
     <button
       type="button"
       className={abaRota === "operacao" ? "aba-rota ativa" : "aba-rota"}

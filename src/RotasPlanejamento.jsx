@@ -35,6 +35,9 @@ reabrirRota,
     </div>
 
     <div className="planejamento-acoes-principais">
+
+  {rotaSelecionada.status !== "FINALIZADA" && (
+    <>
       <button
         type="button"
         className="btn-rota-acao"
@@ -44,36 +47,38 @@ reabrirRota,
       </button>
 
       <button
-  type="button"
-  className="btn-rota-acao"
-  onClick={() => ordenarRotaPorDistancia(rotaSelecionada)}
->
-  📍 Ordenar por distância
-</button>
+        type="button"
+        className="btn-rota-acao"
+        onClick={() => ordenarRotaPorDistancia(rotaSelecionada)}
+      >
+        📍 Ordenar por distância
+      </button>
 
       {rotaSelecionada.status === "ABERTA" && (
-  <button
-    type="button"
-    className="btn-rota-acao"
-    onClick={() => fecharRota(rotaSelecionada)}
-  >
-    Fechar rota
-  </button>
-)}
+        <button
+          type="button"
+          className="btn-rota-acao"
+          onClick={() => fecharRota(rotaSelecionada)}
+        >
+          Fechar rota
+        </button>
+      )}
+    </>
+  )}
 
-{(rotaSelecionada.status === "FECHADA" ||
-  rotaSelecionada.status === "FINALIZADA") &&
-  (perfil?.tipo_perfil === "admin" ||
-    rotaSelecionada.criado_por === usuarioId) && (
-    <button
-      type="button"
-      className="btn-rota-acao"
-      onClick={() => reabrirRota(rotaSelecionada)}
-    >
-      Reabrir rota
-    </button>
-)}
-    </div>
+  {rotaSelecionada.status === "FINALIZADA" &&
+    (perfil?.tipo_perfil === "admin" ||
+      rotaSelecionada.criado_por === usuarioId) && (
+      <button
+        type="button"
+        className="btn-rota-acao"
+        onClick={() => reabrirRota(rotaSelecionada)}
+      >
+        Reabrir rota
+      </button>
+    )}
+
+</div>
 
     {buscaClienteRota.trim() !== "" && (
       <div className="grid-clientes">
@@ -100,12 +105,11 @@ reabrirRota,
                 <strong>Cidade:</strong> {cliente.cidade} / {cliente.uf}
               </p>
 
-              <button
-                type="button"
-                onClick={() => adicionarClienteNaRota(cliente)}
-              >
-                Adicionar
-              </button>
+              {rotaSelecionada.status !== "FINALIZADA" && (
+  <button type="button" onClick={() => adicionarClienteNaRota(cliente)}>
+    Adicionar
+  </button>
+)}
             </div>
           ))}
       </div>
@@ -145,13 +149,15 @@ reabrirRota,
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  className="btn-mini-status remover"
-                  onClick={() => removerClienteDaRota(item)}
-                >
-                  Remover
-                </button>
+                {rotaSelecionada.status !== "FINALIZADA" && (
+  <button
+    type="button"
+    className="btn-mini-status remover"
+    onClick={() => removerClienteDaRota(item)}
+  >
+    Remover
+  </button>
+)}
               </div>
             );
           })}
