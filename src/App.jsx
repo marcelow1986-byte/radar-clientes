@@ -158,7 +158,7 @@ if (
   setModoRecuperacaoSenha(true);
 }
 
-    const { data } = supabase.auth.onAuthStateChange((_event, sessionAtual) => {
+    const { data } = supabase.auth.onAuthStateChange((event, sessionAtual) => {
   const estaEmRecuperacao =
     window.location.href.includes("type=recovery") ||
     window.location.hash.includes("access_token") ||
@@ -171,21 +171,22 @@ if (
   setSession(sessionAtual);
 
   if (sessionAtual?.user) {
-    if (!estaEmRecuperacao) {
-      if (!window.localStorage.getItem(TELA_ATUAL_STORAGE_KEY)) {
+    if (event === "SIGNED_IN" && !estaEmRecuperacao) {
+      const existeTelaSalva = window.localStorage.getItem(TELA_ATUAL_STORAGE_KEY);
+
+      if (!existeTelaSalva) {
         setTelaAtual("home");
+        setRotaSelecionada(null);
+        setClientesDaRota([]);
+        setBuscaClienteRota("");
+        setModoProximos(false);
+        setLocalizacaoUsuario(null);
+        setOrigemOrdenacaoRota("");
       }
     }
 
-    setRotaSelecionada(null);
-    setClientesDaRota([]);
-    setBuscaClienteRota("");
-    setModoProximos(false);
-    setLocalizacaoUsuario(null);
-    setOrigemOrdenacaoRota("");
-
     carregarPerfil(sessionAtual.user.id);
-  } else {
+  } else if (event === "SIGNED_OUT") {
     setPerfil(null);
     setClientes([]);
     setRotas([]);
