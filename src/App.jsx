@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "./supabaseClient";
 import "./app-global.css";
 import "./home.css";
 import "./clientes.css";
 import "./login.css";
+import Login from "./Login.jsx";
 import "./admin.css";
 import "./rotas.css";
+import "./modal-cidade.css";
 import Rotas from "./Rotas.jsx";
 import {
   Users,
@@ -16,6 +18,14 @@ import {
   Settings,
   ChevronRight,
   LogOut,
+  LockOpen,
+  PlayCircle,
+  Flag,
+  CheckCircle,
+  UserCheck,
+  AlertTriangle,
+  Trophy,
+  CalendarDays,
 } from "lucide-react";
 
 function App() {
@@ -23,6 +33,10 @@ function App() {
   const [perfil, setPerfil] = useState(null);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [senhaAtualInterna, setSenhaAtualInterna] = useState("");
+const [novaSenhaInterna, setNovaSenhaInterna] = useState("");
+const [confirmarSenhaInterna, setConfirmarSenhaInterna] = useState("");
+const [alterandoSenhaInterna, setAlterandoSenhaInterna] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [carregando, setCarregando] = useState(true);
@@ -41,13 +55,41 @@ function App() {
   const [buscaClienteRota, setBuscaClienteRota] = useState("");
   const [rotas, setRotas] = useState([]);
   const [nomeNovaRota, setNomeNovaRota] = useState("");
+  const [usuarioResponsavelRota, setUsuarioResponsavelRota] = useState("");
+  const [filtroResponsavelRotas, setFiltroResponsavelRotas] = useState("");
+  const [filtroStatusRotas, setFiltroStatusRotas] = useState("");
   const [rotaSelecionada, setRotaSelecionada] = useState(null);
   const [modoReordenarRota, setModoReordenarRota] = useState(false);
   const [sequenciasEditadas, setSequenciasEditadas] = useState({});
+  const [modoRecuperacaoSenha, setModoRecuperacaoSenha] = useState(false);
+const [novaSenha, setNovaSenha] = useState("");
+const [confirmarNovaSenha, setConfirmarNovaSenha] = useState("");
+const [origemOrdenacaoRota, setOrigemOrdenacaoRota] = useState("");
+const [modalCidadeAberto, setModalCidadeAberto] = useState(false);
+const [ultimaCidadeBuscada, setUltimaCidadeBuscada] = useState("");
+const [textoCidadeBusca, setTextoCidadeBusca] = useState("");
+
+const [sugestoesCidade, setSugestoesCidade] = useState([]);
+
+const [callbackCidadeSelecionada, setCallbackCidadeSelecionada] = useState(null);
+
+const [carregandoCidade, setCarregandoCidade] = useState(false);
+  useEffect(() => {
+
+    if (
+      perfil?.tipo_perfil === "admin"
+    ) {
+      carregarUsuariosPerfis(perfil);
+    }
+
+  }, [perfil]);
+
+  async function carregarPerfil(userId) {
+
+  }
   const [usuariosPerfis, setUsuariosPerfis] = useState([]);
   const [carregandoUsuarios, setCarregandoUsuarios] = useState(false);
   const [clientesProximosAtivo, setClientesProximosAtivo] = useState(false);
-
   const [usuarioPerfilForm, setUsuarioPerfilForm] = useState({
     nome: "",
     email: "",
@@ -87,21 +129,66 @@ function App() {
   useEffect(() => {
     iniciarSessao();
 
-    const { data } = supabase.auth.onAuthStateChange((_event, sessionAtual) => {
-      setSession(sessionAtual);
+const hash = window.location.hash;
 
-      if (sessionAtual?.user) {
-        carregarPerfil(sessionAtual.user.id);
-      } else {
-        setPerfil(null);
-        setClientes([]);
-      }
-    });
+if (
+  window.location.href.includes("type=recovery") ||
+  window.location.hash.includes("access_token") ||
+  window.location.hash.includes("refresh_token")
+) {
+  setModoRecuperacaoSenha(true);
+}
+
+    const { data } = supabase.auth.onAuthStateChange((_event, sessionAtual) => {
+  const estaEmRecuperacao =
+    window.location.href.includes("type=recovery") ||
+    window.location.hash.includes("access_token") ||
+    window.location.hash.includes("refresh_token");
+
+  if (estaEmRecuperacao) {
+    setModoRecuperacaoSenha(true);
+  }
+
+  setSession(sessionAtual);
+
+  if (sessionAtual?.user) {
+    if (!estaEmRecuperacao) {
+      setTelaAtual("home");
+    }
+
+    setRotaSelecionada(null);
+    setClientesDaRota([]);
+    setBuscaClienteRota("");
+    setModoProximos(false);
+    setLocalizacaoUsuario(null);
+    setOrigemOrdenacaoRota("");
+
+    carregarPerfil(sessionAtual.user.id);
+  } else {
+    setPerfil(null);
+    setClientes([]);
+    setRotas([]);
+    setRotaSelecionada(null);
+    setClientesDaRota([]);
+
+    if (!estaEmRecuperacao) {
+      setTelaAtual("home");
+    }
+  }
+});
 
     return () => {
       data.subscription.unsubscribe();
     };
   }, []);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    carregarSugestoesCidade(textoCidadeBusca);
+  }, 400);
+
+  return () => clearTimeout(timer);
+}, [textoCidadeBusca, ultimaCidadeBuscada]);
 
   async function iniciarSessao() {
     const { data } = await supabase.auth.getSession();
@@ -131,12 +218,132 @@ function App() {
     await carregarPerfil(data.user.id);
   }
 
-  async function sair() {
-    await supabase.auth.signOut();
-    setSession(null);
-    setPerfil(null);
-    setClientes([]);
+  async function enviarRecuperacaoSenha() {
+  if (!email.trim()) {
+    alert("Informe seu e-mail para receber o link de recuperação.");
+    return;
   }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: window.location.origin,
+  });
+
+  if (error) {
+    alert("Não foi possível enviar o e-mail de recuperação: " + error.message);
+    return;
+  }
+
+  alert("Enviamos um e-mail com as instruções para alterar sua senha.");
+}
+async function salvarNovaSenha() {
+  if (!novaSenha.trim()) {
+    alert("Informe a nova senha.");
+    return;
+  }
+
+  if (novaSenha !== confirmarNovaSenha) {
+    alert("As senhas não conferem.");
+    return;
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: novaSenha,
+  });
+
+  if (error) {
+    alert("Não foi possível alterar a senha: " + error.message);
+    return;
+  }
+
+  alert("Senha alterada com sucesso.");
+
+  setModoRecuperacaoSenha(false);
+
+  setNovaSenha("");
+  setConfirmarNovaSenha("");
+
+  window.location.hash = "";
+}
+
+async function alterarSenhaInterna() {
+  if (!senhaAtualInterna.trim()) {
+    alert("Informe a senha atual.");
+    return;
+  }
+
+  if (!novaSenhaInterna.trim()) {
+    alert("Informe a nova senha.");
+    return;
+  }
+
+  if (novaSenhaInterna !== confirmarSenhaInterna) {
+    alert("A nova senha e a confirmação não conferem.");
+    return;
+  }
+
+  setAlterandoSenhaInterna(true);
+
+  const { error: erroLogin } = await supabase.auth.signInWithPassword({
+    email: session.user.email,
+    password: senhaAtualInterna,
+  });
+
+  if (erroLogin) {
+    alert("Senha atual inválida.");
+    setAlterandoSenhaInterna(false);
+    return;
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: novaSenhaInterna,
+  });
+
+  if (error) {
+    alert("Não foi possível alterar a senha: " + error.message);
+    setAlterandoSenhaInterna(false);
+    return;
+  }
+
+  alert("Senha alterada com sucesso.");
+
+  setSenhaAtualInterna("");
+  setNovaSenhaInterna("");
+  setConfirmarSenhaInterna("");
+
+  setAlterandoSenhaInterna(false);
+}
+
+  async function sair() {
+
+  await supabase.auth.signOut();
+
+  setSession(null);
+
+  setPerfil(null);
+
+  setClientes([]);
+
+  setRotas([]);
+
+  setClientesDaRota([]);
+
+  setRotaSelecionada(null);
+
+  setBuscaClienteRota("");
+
+  setNomeNovaRota("");
+
+  setTelaAtual("home");
+
+  setModoProximos(false);
+
+  setLocalizacaoUsuario(null);
+
+  setOrigemOrdenacaoRota("");
+
+  setUsuarioResponsavelRota("");
+
+}
 
   async function carregarPerfil(userId) {
     const { data, error } = await supabase
@@ -152,36 +359,108 @@ function App() {
     }
 
     setPerfil(data);
+    setUsuarioResponsavelRota(userId);
+    await carregarUsuariosPerfis();
     await carregarClientes(data);
   }
 
   async function carregarClientes(perfilUsuario) {
-    setCarregando(true);
+  setCarregando(true);
 
-    let consulta = supabase
-      .from("clientes")
-      .select("*")
-      .order("cliente", { ascending: true });
+  let consulta = supabase
+    .from("clientes")
+    .select("*")
+    .order("cliente", { ascending: true });
 
-    if (perfilUsuario.tipo_perfil === "representante") {
-      consulta = consulta.eq(
-        "codigo_representante",
-        perfilUsuario.codigo_representante,
-      );
-    }
-
-    const { data, error } = await consulta;
-
-    if (error) {
-      alert("Falha ao carregar clientes: " + error.message);
-      setClientes([]);
-    } else {
-      setClientes(data || []);
-      carregarResumoGeo();
-    }
-
-    setCarregando(false);
+  if (perfilUsuario.tipo_perfil === "representante") {
+    consulta = consulta.eq(
+      "codigo_representante",
+      perfilUsuario.codigo_representante,
+    );
   }
+
+  const { data: clientesData, error } = await consulta;
+
+  if (error) {
+    alert("Falha ao carregar clientes: " + error.message);
+    setClientes([]);
+    setCarregando(false);
+    return;
+  }
+
+  const { data: geosData, error: erroGeo } = await supabase
+    .from("clientes_geolocalizacao")
+    .select(`
+      codigo_cliente,
+      latitude,
+      longitude,
+      erro_geocodificacao,
+      geocodificado_em
+    `);
+
+  if (erroGeo) {
+    alert("Falha ao carregar geolocalização: " + erroGeo.message);
+    setClientes(clientesData || []);
+    setCarregando(false);
+    return;
+  }
+
+  const mapaGeo = {};
+
+  (geosData || []).forEach((geo) => {
+    mapaGeo[String(geo.codigo_cliente)] = geo;
+  });
+
+  const clientesComGeo = (clientesData || []).map((cliente) => {
+    const geo =
+      mapaGeo[String(cliente.codigo_cliente)] || null;
+
+    return {
+      ...cliente,
+
+      latitude:
+        geo?.latitude ?? cliente.latitude ?? null,
+
+      longitude:
+        geo?.longitude ?? cliente.longitude ?? null,
+
+      erro_geocodificacao:
+        geo?.erro_geocodificacao ??
+        cliente.erro_geocodificacao ??
+        null,
+
+      geocodificado_em:
+        geo?.geocodificado_em ??
+        cliente.geocodificado_em ??
+        null,
+    };
+  });
+
+  setClientes(clientesComGeo);
+
+  carregarResumoGeo();
+
+  setCarregando(false);
+}
+
+  function abrirModalCidade(callback) {
+  setTextoCidadeBusca("");
+  setSugestoesCidade([]);
+  setCallbackCidadeSelecionada(() => callback);
+  setModalCidadeAberto(true);
+}
+
+function selecionarCidade(item) {
+  setModalCidadeAberto(false);
+
+  setTextoCidadeBusca("");
+
+  setSugestoesCidade([]);
+
+  if (callbackCidadeSelecionada) {
+    callbackCidadeSelecionada(item);
+  }
+}
 
   function montarEnderecoCompleto(linha) {
     return [
@@ -355,6 +634,118 @@ function App() {
     throw new Error("Endereço não localizado");
   }
 
+async function buscarCoordenadasPorCidade(cidadeInformada) {
+  try {
+    const cidade = String(cidadeInformada || "").trim();
+
+    if (!cidade) {
+      alert("Cidade não informada.");
+      return null;
+    }
+
+    const textoBusca = cidade.toLowerCase().includes("brasil")
+      ? cidade
+      : `${cidade}, Rio Grande do Sul, Brasil`;
+
+    const url =
+      "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
+      encodeURIComponent(textoBusca);
+
+    const resposta = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!resposta.ok) {
+      alert("Não foi possível consultar a cidade.");
+      return null;
+    }
+
+    const dados = await resposta.json();
+
+    if (!Array.isArray(dados) || dados.length === 0) {
+      alert("Cidade não localizada. Tente informar cidade e UF. Ex: Parobé RS");
+      return null;
+    }
+
+    return {
+      latitude: Number(dados[0].lat),
+      longitude: Number(dados[0].lon),
+      municipio_origem: cidade,
+    };
+  } catch (erro) {
+    console.error("Erro ao buscar cidade:", erro);
+    alert("Falha ao localizar cidade: " + erro.message);
+    return null;
+  }
+}
+
+async function buscarSugestoesCidade(texto) {
+  if (!texto || texto.trim().length < 3) {
+    return [];
+  }
+
+  const url =
+    `https://nominatim.openstreetmap.org/search?` +
+    `format=json` +
+    `&addressdetails=1` +
+    `&limit=5` +
+    `&countrycodes=br` +
+    `&q=${encodeURIComponent(texto.trim())}`;
+
+  const resposta = await fetch(url);
+  const dados = await resposta.json();
+
+  return dados.map((item) => {
+    const cidade =
+      item.address?.city ||
+      item.address?.town ||
+      item.address?.village ||
+      item.address?.municipality ||
+      item.address?.county ||
+      "";
+
+    const estado = item.address?.state || "";
+
+    return {
+      nome: cidade && estado ? `${cidade} - ${estado}` : item.display_name,
+      latitude: Number(item.lat),
+      longitude: Number(item.lon),
+      display_name: item.display_name,
+    };
+  });
+}
+
+async function carregarSugestoesCidade(texto) {
+  const termo = String(texto || "").trim();
+
+  if (termo.length < 3) {
+    setSugestoesCidade([]);
+    setUltimaCidadeBuscada("");
+    return;
+  }
+
+  if (termo === ultimaCidadeBuscada) {
+    return;
+  }
+
+  try {
+    setCarregandoCidade(true);
+    setUltimaCidadeBuscada(termo);
+
+    const resultados = await buscarSugestoesCidade(termo);
+
+    setSugestoesCidade(resultados);
+  } catch (erro) {
+    console.error("Erro ao buscar cidades:", erro);
+  } finally {
+    setCarregandoCidade(false);
+  }
+}
+
+
+
   function abrirMaps(cliente) {
     if (!cliente?.latitude || !cliente?.longitude) {
       alert("Cliente sem coordenadas.");
@@ -392,7 +783,8 @@ function App() {
     window.open(`https://wa.me/55${telefone}`, "_blank");
   }
 
-  let clientesFiltrados = clientes.filter((item) => {
+  const clientesFiltrados = useMemo(() => {
+  let lista = clientes.filter((item) => {
     const termo = filtro.toLowerCase();
 
     return (
@@ -409,7 +801,7 @@ function App() {
   });
 
   if (modoProximos && localizacaoUsuario) {
-    clientesFiltrados = clientesFiltrados
+    lista = lista
       .filter((item) => item.latitude !== null && item.longitude !== null)
       .map((item) => ({
         ...item,
@@ -417,12 +809,93 @@ function App() {
           localizacaoUsuario.latitude,
           localizacaoUsuario.longitude,
           Number(item.latitude),
-          Number(item.longitude),
+          Number(item.longitude)
         ),
       }))
       .filter((item) => item.distancia_km <= raioKm)
       .sort((a, b) => a.distancia_km - b.distancia_km);
   }
+
+  return lista;
+}, [clientes, filtro, modoProximos, localizacaoUsuario, raioKm]);
+
+const indicadoresDashboard = useMemo(() => {
+  const totalRotas = rotas.length;
+
+  const abertas = rotas.filter((rota) => rota.status === "ABERTA").length;
+  const fechadas = rotas.filter((rota) => rota.status === "FECHADA").length;
+  const emAndamento = rotas.filter((rota) => rota.status === "EM_ANDAMENTO").length;
+  const finalizadas = rotas.filter((rota) => rota.status === "FINALIZADA").length;
+
+  const totalClientesRotas = rotas.reduce(
+    (total, rota) => total + Number(rota.total_clientes || 0),
+    0
+  );
+
+  const totalVisitados = rotas.reduce(
+    (total, rota) => total + Number(rota.total_visitados || 0),
+    0
+  );
+
+  const totalPendentes = rotas.reduce(
+    (total, rota) => total + Number(rota.total_pendentes || 0),
+    0
+  );
+
+  const percentualConclusao =
+  totalClientesRotas > 0
+    ? Math.round((totalVisitados / totalClientesRotas) * 100)
+    : 0;
+
+    const rankingResponsaveis = rotas.reduce((lista, rota) => {
+  const nome = rota.responsavel_nome || "Sem responsável";
+
+  const existente = lista.find((item) => item.nome === nome);
+
+  if (existente) {
+    existente.totalRotas += 1;
+    existente.totalClientes += Number(rota.total_clientes || 0);
+    existente.totalVisitados += Number(rota.total_visitados || 0);
+    existente.totalPendentes += Number(rota.total_pendentes || 0);
+  } else {
+    lista.push({
+      nome,
+      totalRotas: 1,
+      totalClientes: Number(rota.total_clientes || 0),
+      totalVisitados: Number(rota.total_visitados || 0),
+      totalPendentes: Number(rota.total_pendentes || 0),
+    });
+  }
+
+  return lista;
+}, []);
+
+rankingResponsaveis.sort((a, b) => b.totalVisitados - a.totalVisitados);
+
+const rotasCriticas = rotas
+  .filter(
+    (rota) =>
+      ["ABERTA", "FECHADA", "EM_ANDAMENTO"].includes(rota.status) &&
+      Number(rota.total_pendentes || 0) > 0
+  )
+  .sort((a, b) => Number(b.total_pendentes || 0) - Number(a.total_pendentes || 0))
+  .slice(0, 5);
+
+  return {
+    totalRotas,
+    abertas,
+    fechadas,
+    emAndamento,
+    finalizadas,
+    totalClientes: clientes.length,
+    totalClientesRotas,
+    totalVisitados,
+    totalPendentes,
+    percentualConclusao,
+    rankingResponsaveis,
+    rotasCriticas,
+  };
+}, [rotas, clientes]);
 
   async function atualizarCoordenadasPendentes() {
     if (perfil.tipo_perfil !== "admin") {
@@ -511,35 +984,74 @@ function App() {
     return raioTerra * c;
   }
 
-  function buscarClientesProximos() {
-    if (!navigator.geolocation) {
-      alert("Geolocalização não disponível neste dispositivo.");
+  async function buscarClientesProximos() {
+    const usarLocalizacaoAtual = confirm(
+      "Deseja usar sua localização atual?\n\nOK = Usar localização atual\nCancelar = Informar cidade manualmente"
+    );
+
+    if (usarLocalizacaoAtual) {
+      if (!navigator.geolocation) {
+        alert("Geolocalização não disponível neste dispositivo.");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (posicao) => {
+          setLocalizacaoUsuario({
+            latitude: posicao.coords.latitude,
+            longitude: posicao.coords.longitude,
+            municipio_origem: "Localização atual",
+          });
+
+          setOrigemOrdenacaoRota("Localização atual");
+          setModoProximos(false);
+
+          setTimeout(() => {
+            setModoProximos(true);
+          }, 100);
+        },
+        () => {
+          alert("Não foi possível obter sua localização.");
+        },
+      );
+
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (posicao) => {
-        setLocalizacaoUsuario({
-          latitude: posicao.coords.latitude,
-          longitude: posicao.coords.longitude,
-        });
+    abrirModalCidade((cidadeSelecionada) => {
+      if (!cidadeSelecionada) {
+        return;
+      }
 
-        setModoProximos(false);
+      const origem = {
+        latitude: cidadeSelecionada.latitude,
+        longitude: cidadeSelecionada.longitude,
+        municipio_origem: cidadeSelecionada.nome,
+      };
 
-        setTimeout(() => {
-          setModoProximos(true);
-        }, 100);
-      },
-      () => {
-        alert("Não foi possível obter sua localização.");
-      },
-    );
+      setOrigemOrdenacaoRota(cidadeSelecionada.nome);
+      setLocalizacaoUsuario(origem);
+      setModoProximos(false);
+
+      setTimeout(() => {
+        setModoProximos(true);
+      }, 100);
+    });
   }
 
-  function limparModoProximos() {
-    setModoProximos(false);
-    setLocalizacaoUsuario(null);
-  }
+function limparModoProximos() {
+  setModoProximos(false);
+  setLocalizacaoUsuario(null);
+  setClientesProximosAtivo(false);
+  setOrigemOrdenacaoRota("");
+}
+
+function abrirRotasPorStatus(status) {
+  setFiltroStatusRotas(status);
+  setFiltroResponsavelRotas("");
+  setTelaAtual("rotas");
+  carregarRotas();
+}
 
   function abrirModalVisita(cliente) {
     setClienteVisita(cliente);
@@ -657,14 +1169,17 @@ function App() {
   );
 
   async function carregarRotas() {
-    let consultaRotas = supabase
-      .from("rotas")
-      .select("*")
-      .order("created_at", { ascending: false });
+   let consultaRotas = supabase
+  .from("rotas")
+  .select("*")
+  .order("created_at", { ascending: false });
 
     if (perfil?.tipo_perfil !== "admin") {
-      consultaRotas = consultaRotas.eq("user_id", session.user.id);
-    }
+  consultaRotas = consultaRotas.eq(
+    "usuario_responsavel",
+    session.user.id
+  );
+}
 
     const { data: rotasData, error } = await consultaRotas;
 
@@ -682,30 +1197,81 @@ function App() {
       return;
     }
 
-    const rotasComResumo = (rotasData || []).map((rota) => {
-      const itens = (itensRota || []).filter(
-        (item) => item.rota_id === rota.id,
-      );
+    const listaUsuarios = usuariosPerfis || [];
 
-      return {
-        ...rota,
-        total_clientes: itens.length,
-        total_visitados: itens.filter(
-          (item) => item.status === "VISITADO" || item.visitado === true,
-        ).length,
-        total_cancelados: itens.filter((item) => item.status === "CANCELADO")
-          .length,
-        total_pendentes: itens.filter(
-          (item) =>
-            item.status === "PENDENTE" ||
-            item.status === null ||
-            item.status === undefined,
-        ).length,
-      };
-    });
+    const rotasComResumo = (rotasData || []).map((rota) => {
+  const itens = (itensRota || []).filter(
+    (item) => item.rota_id === rota.id,
+  );
+
+  const responsavel = listaUsuarios.find(
+    (usuario) => usuario.user_id === rota.usuario_responsavel
+  );
+
+  return {
+    ...rota,
+    responsavel_nome: responsavel?.nome || "",
+    total_clientes: itens.length,
+    total_visitados: itens.filter(
+      (item) => item.status === "VISITADO" || item.visitado === true,
+    ).length,
+    total_cancelados: itens.filter((item) => item.status === "CANCELADO")
+      .length,
+    total_pendentes: itens.filter(
+      (item) =>
+        item.status === "PENDENTE" ||
+        item.status === null ||
+        item.status === undefined,
+    ).length,
+  };
+});
 
     setRotas(rotasComResumo);
   }
+
+async function alterarResponsavelRota(rota, novoResponsavel) {
+  const usuarioNovo = usuariosPerfis.find(
+    (usuario) => usuario.user_id === novoResponsavel
+  );
+
+  const novoNomeResponsavel = usuarioNovo?.nome || "";
+
+  const { error } = await supabase
+    .from("rotas")
+    .update({
+      usuario_responsavel: novoResponsavel,
+    })
+    .eq("id", rota.id);
+
+  if (error) {
+    alert("Erro ao alterar responsável: " + error.message);
+    return;
+  }
+
+  setRotas((rotasAnteriores) =>
+    rotasAnteriores.map((item) =>
+      item.id === rota.id
+        ? {
+            ...item,
+            usuario_responsavel: novoResponsavel,
+            responsavel_nome: novoNomeResponsavel,
+          }
+        : item
+    )
+  );
+
+  setRotaSelecionada((rotaAtual) => {
+    if (!rotaAtual || rotaAtual.id !== rota.id) {
+      return rotaAtual;
+    }
+
+    return {
+      ...rotaAtual,
+      usuario_responsavel: novoResponsavel,
+      responsavel_nome: novoNomeResponsavel,
+    };
+  });
+}
 
   async function abrirRota(rota) {
     if (!rota) {
@@ -835,11 +1401,19 @@ function App() {
     }
 
     const { error } = await supabase.from("rotas").insert({
-      nome: nomeNovaRota.trim(),
-      user_id: session.user.id,
-      criado_por: session.user.id,
-      status: "ABERTA",
-    });
+  nome: nomeNovaRota.trim(),
+
+  user_id: session.user.id,
+
+  criado_por: session.user.id,
+
+  usuario_responsavel:
+  perfil?.tipo_perfil === "admin"
+    ? usuarioResponsavelRota
+    : session.user.id,
+
+  status: "ABERTA",
+});
 
     if (error) {
       alert("Erro ao criar rota");
@@ -1086,31 +1660,63 @@ function App() {
   }
 
   async function fecharRota(rota) {
-    if (!rota?.id) return;
+  if (!rota?.id) return;
 
-    const confirmar = confirm("Deseja fechar esta rota?");
+  const { data: itensDaRota, error: erroConsulta } = await supabase
+    .from("rota_clientes")
+    .select("id, status")
+    .eq("rota_id", rota.id);
 
-    if (!confirmar) return;
-
-    const { error } = await supabase
-      .from("rotas")
-      .update({
-        status: "FECHADA",
-      })
-      .eq("id", rota.id);
-
-    if (error) {
-      alert("Falha ao fechar rota: " + error.message);
-      return;
-    }
-
-    setRotaSelecionada({
-      ...rota,
-      status: "FECHADA",
-    });
-
-    await carregarRotas();
+  if (erroConsulta) {
+    alert("Falha ao validar clientes da rota: " + erroConsulta.message);
+    return;
   }
+
+  const temPendente = (itensDaRota || []).some(
+    (item) => item.status === "PENDENTE" || !item.status
+  );
+
+  const novoStatus = temPendente ? "FECHADA" : "FINALIZADA";
+  const dataFinalizacao =
+    novoStatus === "FINALIZADA" ? new Date().toISOString() : null;
+
+  const confirmar = confirm(
+    novoStatus === "FINALIZADA"
+      ? "A rota não possui clientes pendentes. Deseja fechar e finalizar automaticamente?"
+      : "Deseja fechar esta rota?"
+  );
+
+  if (!confirmar) return;
+
+  const { error } = await supabase
+    .from("rotas")
+    .update({
+      status: novoStatus,
+      finalizada_em: dataFinalizacao,
+    })
+    .eq("id", rota.id);
+
+  if (error) {
+    alert("Falha ao fechar rota: " + error.message);
+    return;
+  }
+
+  const rotaAtualizada = {
+    ...rota,
+    status: novoStatus,
+    finalizada_em: dataFinalizacao,
+  };
+
+  setRotaSelecionada(rotaAtualizada);
+
+  await carregarRotas();
+
+  alert(
+    novoStatus === "FINALIZADA"
+      ? "Rota finalizada automaticamente, pois não possui clientes pendentes."
+      : "Rota fechada com sucesso."
+  );
+}
 
   async function iniciarRota(rota) {
     if (!rota?.id) return;
@@ -1197,7 +1803,7 @@ await carregarRotas();
 alert("Rota finalizada com sucesso.");
 }
 
-  async function reabrirRota(rota) {
+async function reabrirRota(rota) {
   if (!rota?.id) return;
 
   const confirmar = confirm("Deseja reabrir esta rota?");
@@ -1205,19 +1811,24 @@ alert("Rota finalizada com sucesso.");
   if (!confirmar) return;
 
   const dataHora = new Date().toLocaleString("pt-BR");
-
   const statusOrigem = rota.status || "SEM_STATUS";
+
+  let novoStatus = "ABERTA";
+
+  if (statusOrigem === "FINALIZADA") {
+    novoStatus = "FECHADA";
+  }
 
   const novaObservacao =
     (rota.observacao || "") +
-    `\n[${dataHora}] Rota reaberta de ${statusOrigem} para FECHADA por ${
+    `\n[${dataHora}] Rota reaberta de ${statusOrigem} para ${novoStatus} por ${
       perfil?.nome || "usuário"
     }.`;
 
   const { error } = await supabase
     .from("rotas")
     .update({
-      status: "FECHADA",
+      status: novoStatus,
       observacao: novaObservacao,
       finalizada_em: null,
     })
@@ -1230,7 +1841,7 @@ alert("Rota finalizada com sucesso.");
 
   const rotaReaberta = {
     ...rota,
-    status: "FECHADA",
+    status: novoStatus,
     observacao: novaObservacao,
     finalizada_em: null,
   };
@@ -1239,91 +1850,171 @@ alert("Rota finalizada com sucesso.");
 
   await carregarRotas();
 
-  alert("Rota reaberta como FECHADA.");
+  alert(`Rota reaberta como ${novoStatus}.`);
 }
+
+  async function executarOrdenacaoRotaPorDistancia(rota, origemOrdenacao) {
+    if (!origemOrdenacao) {
+      return;
+    }
+
+    setLocalizacaoUsuario(origemOrdenacao);
+    setOrigemOrdenacaoRota(origemOrdenacao.municipio_origem || "");
+
+    const itensValidos = clientesDaRota
+      .map((item) => {
+        const cliente = clientes.find((cli) => cli.id === item.cliente_id);
+
+        if (!cliente?.latitude || !cliente?.longitude) {
+          return null;
+        }
+
+        const distancia = calcularDistanciaKm(
+          origemOrdenacao.latitude,
+          origemOrdenacao.longitude,
+          Number(cliente.latitude),
+          Number(cliente.longitude)
+        );
+
+        return {
+          ...item,
+          distancia,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.distancia - b.distancia);
+
+    if (!itensValidos.length) {
+      alert("Nenhum cliente da rota possui coordenadas para ordenação.");
+      return;
+    }
+
+    const confirmar = confirm(
+      `Deseja reorganizar a sequência da rota com base na origem ${
+        origemOrdenacao.municipio_origem || "selecionada"
+      }?`
+    );
+
+    if (!confirmar) return;
+
+    for (let i = 0; i < itensValidos.length; i++) {
+      const item = itensValidos[i];
+
+      const { error } = await supabase
+        .from("rota_clientes")
+        .update({ sequencia: i + 1 })
+        .eq("id", item.id);
+
+      if (error) {
+        alert("Falha ao ordenar rota: " + error.message);
+        return;
+      }
+    }
+
+    const observacaoOrigem =
+      (rota.observacao || "") +
+      `
+[${new Date().toLocaleString("pt-BR")}] Rota ordenada por distância. Origem: ${
+        origemOrdenacao.municipio_origem || "Localização atual"
+      }.`;
+
+    await supabase
+      .from("rotas")
+      .update({
+        observacao: observacaoOrigem,
+      })
+      .eq("id", rota.id);
+
+    const rotaAtualizada = {
+      ...rota,
+      observacao: observacaoOrigem,
+    };
+
+    setRotaSelecionada(rotaAtualizada);
+    await abrirRota(rotaAtualizada);
+    await carregarRotas();
+
+    alert("Rota ordenada por distância.");
+  }
 
   async function ordenarRotaPorDistancia(rota) {
-  if (!rota) {
-    alert("Nenhuma rota selecionada.");
-    return;
-  }
+    if (!rota) {
+      alert("Nenhuma rota selecionada.");
+      return;
+    }
 
-  if (!localizacaoUsuario) {
-    alert("Para ordenar por distância, primeiro permita a localização do navegador.");
-    return;
-  }
+    const usarLocalizacaoAtual = confirm(
+      "Deseja ordenar usando sua localização atual?\n\nOK = Usar localização atual\nCancelar = Informar cidade manualmente"
+    );
 
-  const itensValidos = clientesDaRota
-    .map((item) => {
-      const cliente = clientes.find((cli) => cli.id === item.cliente_id);
-
-      if (!cliente?.latitude || !cliente?.longitude) {
-        return null;
+    if (usarLocalizacaoAtual) {
+      if (!navigator.geolocation) {
+        alert("Geolocalização não disponível neste dispositivo.");
+        return;
       }
 
-      const distancia = calcularDistanciaKm(
-        localizacaoUsuario.latitude,
-        localizacaoUsuario.longitude,
-        Number(cliente.latitude),
-        Number(cliente.longitude)
-      );
+      const origemOrdenacao = await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (posicao) => {
+            resolve({
+              latitude: posicao.coords.latitude,
+              longitude: posicao.coords.longitude,
+              municipio_origem: "Localização atual",
+            });
+          },
+          () => {
+            alert("Não foi possível obter sua localização.");
+            resolve(null);
+          },
+        );
+      });
 
-      return {
-        ...item,
-        distancia,
+      await executarOrdenacaoRotaPorDistancia(rota, origemOrdenacao);
+      return;
+    }
+
+    abrirModalCidade(async (cidadeSelecionada) => {
+      if (!cidadeSelecionada) {
+        return;
+      }
+
+      const origemOrdenacao = {
+        latitude: cidadeSelecionada.latitude,
+        longitude: cidadeSelecionada.longitude,
+        municipio_origem: cidadeSelecionada.nome,
       };
-    })
-    .filter(Boolean)
-    .sort((a, b) => a.distancia - b.distancia);
 
-  if (!itensValidos.length) {
-    alert("Nenhum cliente da rota possui coordenadas para ordenação.");
+      await executarOrdenacaoRotaPorDistancia(rota, origemOrdenacao);
+    });
+  }
+
+
+  async function carregarUsuariosPerfis(perfilAtual) {
+
+  if (perfilAtual?.tipo_perfil !== "admin") {
     return;
   }
 
-  const confirmar = confirm(
-    "Deseja reorganizar a sequência da rota com base na distância da sua localização atual?"
-  );
+  setCarregandoUsuarios(true);
 
-  if (!confirmar) return;
+  const { data, error } = await supabase
+    .from("perfis")
+    .select("*")
+    .order("nome", { ascending: true });
+    console.log("ERRO PERFIS:", error);
+    console.log("DATA PERFIS:", data);
 
-  for (let i = 0; i < itensValidos.length; i++) {
-    const item = itensValidos[i];
-
-    const { error } = await supabase
-      .from("rota_clientes")
-      .update({ sequencia: i + 1 })
-      .eq("id", item.id);
-
-    if (error) {
-      alert("Falha ao ordenar rota: " + error.message);
-      return;
-    }
-  }
-
-  await abrirRota(rota);
-  alert("Rota ordenada por distância.");
-}
-
-  async function carregarUsuariosPerfis() {
-    if (perfil?.tipo_perfil !== "admin") return;
-
-    setCarregandoUsuarios(true);
-
-    const { data, error } = await supabase
-      .from("perfis")
-      .select("*")
-      .order("nome", { ascending: true });
-
-    if (error) {
-      alert("Falha ao carregar usuários: " + error.message);
-      setCarregandoUsuarios(false);
-      return;
-    }
-
-    setUsuariosPerfis(data || []);
+  if (error) {
+    alert("Falha ao carregar usuários: " + error.message);
     setCarregandoUsuarios(false);
+    return;
   }
+
+  console.log("Usuarios carregados:", data);
+  setUsuariosPerfis(data || []);
+
+  setCarregandoUsuarios(false);
+}
 
   function limparFormularioUsuarioPerfil() {
     setUsuarioPerfilForm({
@@ -1390,60 +2081,38 @@ alert("Rota finalizada com sucesso.");
     alert("Usuário salvo com sucesso.");
 
     limparFormularioUsuarioPerfil();
-    await carregarUsuariosPerfis();
+    
   }
 
-  if (!session) {
-    return (
-      <div className="login-page">
-        <div className="login-bg-overlay"></div>
 
-        <div className="login-card-premium">
-          <div className="login-topo">
-            <img
-              src="https://phenixonline.com.br/wp-content/uploads/2021/05/Logo-azul.png"
-              alt="Phenix"
-              className="login-logo-phenix"
-            />
+const linkRecuperacaoExpirado =
+  window.location.href.includes("otp_expired") ||
+  window.location.href.includes("access_denied");
 
-            <div className="login-titulos">
-              <h1>Radar Clientes</h1>
+const modoLinkRecuperacao =
+  window.location.href.includes("type=recovery") &&
+  !linkRecuperacaoExpirado;
 
-              <p>Rotas, clientes próximos e oportunidades comerciais</p>
-            </div>
-          </div>
 
-          <form onSubmit={login} className="login-form-premium">
-            <div className="campo-login">
-              <label>E-mail</label>
 
-              <input
-                type="email"
-                placeholder="Digite seu e-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div className="campo-login">
-              <label>Senha</label>
-
-              <input
-                type="password"
-                placeholder="Digite sua senha"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-              />
-            </div>
-
-            <button type="submit" className="botao-login-premium">
-              Entrar no Radar
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
+if (!session || modoLinkRecuperacao || modoRecuperacaoSenha) {
+  return (
+    <Login
+      email={email}
+      setEmail={setEmail}
+      senha={senha}
+      setSenha={setSenha}
+      login={login}
+      enviarRecuperacaoSenha={enviarRecuperacaoSenha}
+      modoRecuperacaoSenha={modoLinkRecuperacao || modoRecuperacaoSenha}
+      novaSenha={novaSenha}
+      setNovaSenha={setNovaSenha}
+      confirmarNovaSenha={confirmarNovaSenha}
+      setConfirmarNovaSenha={setConfirmarNovaSenha}
+      salvarNovaSenha={salvarNovaSenha}
+    />
+  );
+}
 
   if (!perfil) {
     return (
@@ -1500,6 +2169,7 @@ alert("Rota finalizada com sucesso.");
                 setTelaAtual("clientes");
                 setModoProximos(false);
                 setLocalizacaoUsuario(null);
+                setOrigemOrdenacaoRota("");
               }}
             >
               <div className="home-icone-menu">
@@ -1557,6 +2227,7 @@ alert("Rota finalizada com sucesso.");
               className="home-card-menu"
               onClick={() => {
                 setTelaAtual("dashboard");
+                carregarRotas();
               }}
             >
               <div className="home-icone-menu">
@@ -1570,6 +2241,24 @@ alert("Rota finalizada com sucesso.");
 
               <ChevronRight size={28} />
             </button>
+
+<button
+  className="home-card-menu"
+  onClick={() => {
+    setTelaAtual("alterarSenha");
+  }}
+>
+  <div className="home-icone-menu">
+    <Settings size={42} />
+  </div>
+
+  <div className="home-conteudo-menu">
+    <h3>Alterar senha</h3>
+    <p>Atualize sua senha de acesso</p>
+  </div>
+
+  <ChevronRight size={28} />
+</button>
 
             {perfil?.tipo_perfil === "admin" && (
               <button
@@ -1594,6 +2283,67 @@ alert("Rota finalizada com sucesso.");
           </div>
         </>
       )}
+
+{telaAtual === "alterarSenha" && (
+  <section className="painel-admin">
+    <h2>Alterar senha</h2>
+
+    <div className="admin-bloco">
+      <p>Informe sua senha atual e defina uma nova senha de acesso.</p>
+
+      <div className="admin-form-usuarios">
+        <div>
+          <label>Senha atual</label>
+          <input
+            type="password"
+            value={senhaAtualInterna}
+            onChange={(e) => setSenhaAtualInterna(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label>Nova senha</label>
+          <input
+            type="password"
+            value={novaSenhaInterna}
+            onChange={(e) => setNovaSenhaInterna(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label>Confirmar nova senha</label>
+          <input
+            type="password"
+            value={confirmarSenhaInterna}
+            onChange={(e) => setConfirmarSenhaInterna(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="admin-acoes">
+        <button
+          type="button"
+          onClick={alterarSenhaInterna}
+          disabled={alterandoSenhaInterna}
+        >
+          {alterandoSenhaInterna ? "Alterando..." : "Alterar senha"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setSenhaAtualInterna("");
+            setNovaSenhaInterna("");
+            setConfirmarSenhaInterna("");
+            setTelaAtual("home");
+          }}
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </section>
+)}
 
       {perfil.tipo_perfil === "admin" && telaAtual === "admin" && (
         <section className="painel-admin">
@@ -1651,7 +2401,15 @@ alert("Rota finalizada com sucesso.");
 
             <p>Ajuste o perfil do usuário já criado no Supabase Auth.</p>
 
-            <div className="admin-form-usuarios">
+            <div
+  className="admin-form-usuarios"
+  style={{
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    maxWidth: "400px",
+  }}
+>
               <div>
                 <label>Nome</label>
                 <input
@@ -1836,32 +2594,25 @@ alert("Rota finalizada com sucesso.");
               onChange={(e) => setFiltro(e.target.value)}
             />
 
-            <div className="acoes-filtro">
-              {clientesProximosAtivo ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    carregarClientes();
-                    setClientesProximosAtivo(false);
-                  }}
-                >
-                  Limpar proximidade
-                </button>
-              ) : (
-                <button type="button" onClick={buscarClientesProximos}>
-                  Clientes próximos de mim
-                </button>
-              )}
-
-              {modoProximos && (
-                <button type="button" onClick={limparModoProximos}>
-                  Limpar proximidade
-                </button>
-              )}
-            </div>
+            <div className="clientes-toolbar">
+  {modoProximos ? (
+    <button type="button" onClick={limparModoProximos}>
+      Limpar proximidade
+    </button>
+  ) : (
+    <button type="button" onClick={buscarClientesProximos}>
+      Clientes próximos de mim
+    </button>
+  )}
+</div>
 
             {modoProximos && (
-              <div className="controle-raio">
+             <div className="controle-raio controle-raio-card">
+                {origemOrdenacaoRota && (
+  <p className="origem-localizacao">
+    <strong>Origem da busca:</strong> {origemOrdenacaoRota}
+  </p>
+)}
                 <label>Raio de busca:</label>
 
                 <select
@@ -1959,9 +2710,186 @@ alert("Rota finalizada com sucesso.");
             )}
           </section>
         )}
+
+       {telaAtual === "dashboard" && (
+  <section className="painel dashboard-painel">
+    <h2>Dashboard</h2>
+
+    <div className="dashboard-grupo">
+      <h3>
+        <Route size={22} />
+        Rotas
+      </h3>
+
+      <div className="dashboard-indicadores">
+        <div className="dashboard-indicador">
+          <Route size={30} />
+          <span>Total de rotas</span>
+          <strong>{indicadoresDashboard.totalRotas}</strong>
+        </div>
+
+        <div
+          className="dashboard-indicador dashboard-card-click"
+          onClick={() => abrirRotasPorStatus("ABERTA")}
+        >
+          <LockOpen size={30} />
+          <span>Abertas</span>
+          <strong>{indicadoresDashboard.abertas}</strong>
+        </div>
+
+        <div
+          className="dashboard-indicador dashboard-card-click"
+          onClick={() => abrirRotasPorStatus("FECHADA")}
+        >
+          <Flag size={30} />
+          <span>Fechadas</span>
+          <strong>{indicadoresDashboard.fechadas}</strong>
+        </div>
+
+        <div
+          className="dashboard-indicador dashboard-card-click"
+          onClick={() => abrirRotasPorStatus("EM_ANDAMENTO")}
+        >
+          <PlayCircle size={30} />
+          <span>Em andamento</span>
+          <strong>{indicadoresDashboard.emAndamento}</strong>
+        </div>
+
+        <div
+          className="dashboard-indicador dashboard-card-click"
+          onClick={() => abrirRotasPorStatus("FINALIZADA")}
+        >
+          <CheckCircle size={30} />
+          <span>Finalizadas</span>
+          <strong>{indicadoresDashboard.finalizadas}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div className="dashboard-grupo">
+      <h3>
+        <Users size={22} />
+        Clientes
+      </h3>
+
+      <div className="dashboard-indicadores">
+        <div className="dashboard-indicador">
+          <Users size={30} />
+          <span>Clientes cadastrados</span>
+          <strong>{indicadoresDashboard.totalClientes}</strong>
+        </div>
+
+        <div className="dashboard-indicador">
+          <Route size={30} />
+          <span>Clientes em rotas</span>
+          <strong>{indicadoresDashboard.totalClientesRotas}</strong>
+        </div>
+
+        <div className="dashboard-indicador">
+          <UserCheck size={30} />
+          <span>Visitados</span>
+          <strong>{indicadoresDashboard.totalVisitados}</strong>
+        </div>
+
+        <div className="dashboard-indicador">
+          <AlertTriangle size={30} />
+          <span>Pendentes</span>
+          <strong>{indicadoresDashboard.totalPendentes}</strong>
+        </div>
+
+        <div className="dashboard-indicador dashboard-indicador-destaque">
+          <Flag size={30} />
+          <span>Conclusão das rotas</span>
+          <strong>{indicadoresDashboard.percentualConclusao}%</strong>
+        </div>
+      </div>
+    </div>
+
+    <div className="dashboard-duas-colunas">
+      <div className="dashboard-grupo">
+        <h3>
+          <Trophy size={22} />
+          Ranking por responsável
+        </h3>
+
+        <div className="dashboard-ranking">
+          {indicadoresDashboard.rankingResponsaveis.length === 0 ? (
+            <p>Nenhuma rota encontrada.</p>
+          ) : (
+            indicadoresDashboard.rankingResponsaveis.map((item) => (
+              <div className="dashboard-ranking-item" key={item.nome}>
+                <div>
+                  <strong>{item.nome}</strong>
+                  <span>
+                    {item.totalRotas} rota(s) · {item.totalClientes} cliente(s)
+                  </span>
+                </div>
+
+                <div>
+                  <strong>{item.totalVisitados}</strong>
+                  <span>visitados</span>
+                </div>
+
+                <div>
+                  <strong>{item.totalPendentes}</strong>
+                  <span>pendentes</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="dashboard-grupo">
+        <h3>
+          <AlertTriangle size={22} />
+          Rotas com pendências
+        </h3>
+
+        <div className="dashboard-ranking">
+          {indicadoresDashboard.rotasCriticas.length === 0 ? (
+            <p>Nenhuma rota com pendência encontrada.</p>
+          ) : (
+            indicadoresDashboard.rotasCriticas.map((rota) => (
+              <div
+                className="dashboard-ranking-item dashboard-ranking-click"
+                key={rota.id}
+                onClick={() => {
+                  setTelaAtual("rotas");
+                  abrirRota(rota);
+                }}
+              >
+                <div>
+                  <strong>{rota.nome}</strong>
+                  <span>
+                    {rota.responsavel_nome || "Sem responsável"} · {rota.status}
+                  </span>
+                </div>
+
+                <div>
+                  <strong>{rota.total_clientes || 0}</strong>
+                  <span>clientes</span>
+                </div>
+
+                <div>
+                  <strong>{rota.total_pendentes || 0}</strong>
+                  <span>pendentes</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
         {telaAtual === "rotas" && (
           <Rotas
             rotas={rotas}
+            usuariosPerfis={usuariosPerfis}
+            usuarioResponsavelRota={usuarioResponsavelRota}
+            setUsuarioResponsavelRota={setUsuarioResponsavelRota}
             nomeNovaRota={nomeNovaRota}
             setNomeNovaRota={setNomeNovaRota}
             criarRota={criarRota}
@@ -1990,9 +2918,71 @@ alert("Rota finalizada com sucesso.");
             calcularDistanciaKm={calcularDistanciaKm}
             abrirAcompanhamento={abrirAcompanhamento}
             ordenarRotaPorDistancia={ordenarRotaPorDistancia}
+            filtroResponsavelRotas={filtroResponsavelRotas}
+setFiltroResponsavelRotas={setFiltroResponsavelRotas}
+alterarResponsavelRota={alterarResponsavelRota}
+filtroStatusRotas={filtroStatusRotas}
+setFiltroStatusRotas={setFiltroStatusRotas}
           />
         )}
       </main>
+
+      {modalCidadeAberto && (
+        <div className="modal-cidade-overlay">
+          <div className="modal-cidade">
+            <div className="modal-cidade-cabecalho">
+              <h2>Selecionar cidade</h2>
+              <p>Digite pelo menos 3 letras e escolha uma das sugestões.</p>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Ex.: Parobé, Novo Hamburgo, Porto Alegre"
+              value={textoCidadeBusca}
+              onChange={(e) => setTextoCidadeBusca(e.target.value)}
+              autoFocus
+            />
+
+            {carregandoCidade && (
+              <div className="cidade-carregando">Buscando cidades...</div>
+            )}
+
+            {!carregandoCidade && textoCidadeBusca.trim().length > 0 && textoCidadeBusca.trim().length < 3 && (
+              <div className="cidade-ajuda">Digite mais caracteres para iniciar a busca.</div>
+            )}
+
+            {!carregandoCidade && textoCidadeBusca.trim().length >= 3 && sugestoesCidade.length === 0 && (
+              <div className="cidade-ajuda">Nenhuma cidade encontrada. Tente informar cidade e UF.</div>
+            )}
+
+            <div className="cidade-lista">
+              {sugestoesCidade.map((item, index) => (
+                <button
+                  key={`${item.nome}-${index}`}
+                  type="button"
+                  className="cidade-item"
+                  onClick={() => selecionarCidade(item)}
+                >
+                  <strong>{item.nome}</strong>
+                  <span>{item.display_name}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="cidade-fechar"
+              onClick={() => {
+                setModalCidadeAberto(false);
+                setTextoCidadeBusca("");
+                setSugestoesCidade([]);
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       {modalVisita && (
         <div

@@ -21,7 +21,28 @@ function RotasLista({
   excluirRota,
   setAbaRota,
   setModoTelaRota,
+  perfil,
+  usuariosPerfis,
+  usuarioResponsavelRota,
+  setUsuarioResponsavelRota,
+  filtroResponsavelRotas,
+  setFiltroResponsavelRotas,
+  filtroStatusRotas,
+  setFiltroStatusRotas,
 }) {
+  const rotasFiltradas = rotas.filter((rota) => {
+    const atendeResponsavel =
+      !filtroResponsavelRotas ||
+      rota.responsavel_id === filtroResponsavelRotas ||
+      rota.usuario_responsavel_id === filtroResponsavelRotas ||
+      rota.criado_por === filtroResponsavelRotas;
+
+    const atendeStatus =
+      !filtroStatusRotas || rota.status === filtroStatusRotas;
+
+    return atendeResponsavel && atendeStatus;
+  });
+
   return (
     <>
       <div className="rotas-header-premium">
@@ -44,10 +65,65 @@ function RotasLista({
             onChange={(e) => setNomeNovaRota(e.target.value)}
           />
 
+          {perfil?.tipo_perfil === "admin" && (
+            <select
+              value={usuarioResponsavelRota}
+              onChange={(e) => setUsuarioResponsavelRota(e.target.value)}
+            >
+              <option value="">Responsável pela rota</option>
+
+              {usuariosPerfis
+                .filter((usuario) => usuario.ativo)
+                .map((usuario) => (
+                  <option key={usuario.user_id} value={usuario.user_id}>
+                    {usuario.nome} ({usuario.tipo_perfil})
+                  </option>
+                ))}
+            </select>
+          )}
+
           <button type="button" onClick={criarRota}>
             + Criar rota
           </button>
         </div>
+
+        <div className="filtros-rotas-admin">
+  {perfil?.tipo_perfil === "admin" && (
+    <div className="filtro-responsavel-rotas">
+      <label>Filtrar responsável</label>
+
+      <select
+        value={filtroResponsavelRotas}
+        onChange={(e) => setFiltroResponsavelRotas(e.target.value)}
+      >
+        <option value="">Todos</option>
+
+        {usuariosPerfis
+          .filter((usuario) => usuario.ativo)
+          .map((usuario) => (
+            <option key={usuario.user_id} value={usuario.user_id}>
+              {usuario.nome} ({usuario.tipo_perfil})
+            </option>
+          ))}
+      </select>
+    </div>
+  )}
+
+  <div className="filtro-status-rotas">
+    <label>Filtrar status</label>
+
+    <select
+      value={filtroStatusRotas}
+      onChange={(e) => setFiltroStatusRotas(e.target.value)}
+    >
+      <option value="">Todos</option>
+      <option value="ABERTA">Aberta</option>
+      <option value="FECHADA">Fechada</option>
+      <option value="EM_ANDAMENTO">Em andamento</option>
+      <option value="FINALIZADA">Finalizada</option>
+    </select>
+  </div>
+</div>
       </div>
 
       <div className="tabela-rotas-premium">
@@ -61,7 +137,7 @@ function RotasLista({
           <div>Cancelados</div>
         </div>
 
-        {rotas.map((rota) => (
+        {rotasFiltradas.map((rota) => (
           <div className="tabela-rotas-linha" key={rota.id}>
             <div className="tabela-rotas-linha-topo">
               <div className="rota-nome-premium">
@@ -69,6 +145,13 @@ function RotasLista({
 
                 <div className="rota-nome-texto">
                   <strong>{rota.nome}</strong>
+
+                  {perfil?.tipo_perfil === "admin" &&
+                    rota?.responsavel_nome && (
+                      <small className="rota-responsavel">
+                        Responsável: {rota.responsavel_nome}
+                      </small>
+                    )}
                 </div>
               </div>
 
@@ -85,25 +168,21 @@ function RotasLista({
 
               <div className="rota-info-premium indicador-rota">
                 <Users size={15} />
-                
                 <strong>{rota.total_clientes || 0}</strong>
               </div>
 
               <div className="rota-info-premium indicador-rota visitados">
                 <CheckCircle2 size={15} />
-                
                 <strong>{rota.total_visitados || 0}</strong>
               </div>
 
               <div className="rota-info-premium indicador-rota pendentes">
                 <Clock3 size={15} />
-                
                 <strong>{rota.total_pendentes || 0}</strong>
               </div>
 
               <div className="rota-info-premium indicador-rota cancelados">
                 <XCircle size={15} />
-                
                 <strong>{rota.total_cancelados || 0}</strong>
               </div>
             </div>

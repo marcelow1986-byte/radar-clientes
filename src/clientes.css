@@ -137,3 +137,80 @@
     width: 100%;
   }
 }
+
+.origem-localizacao {
+  width: 100%;
+  margin: 0 0 10px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.clientes-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 18px 0;
+}
+
+.controle-raio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 16px auto;
+}
+
+.controle-raio-card {
+  width: fit-content;
+  max-width: 100%;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: #f1f7ff;
+}
+
+.origem-localizacao {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.controle-raio label {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.controle-raio select {
+  min-width: 110px;
+}
+
+@media (max-width: 700px) {
+  .clientes-toolbar {
+    flex-direction: column;
+  }
+
+  .clientes-toolbar button {
+    width: 100%;
+  }
+
+  .controle-raio {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .controle-raio-card {
+    width: 100%;
+  }
+
+  .controle-raio select {
+    width: 100%;
+  }
+}

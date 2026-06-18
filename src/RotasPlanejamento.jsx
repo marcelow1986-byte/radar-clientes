@@ -15,6 +15,8 @@ function RotasPlanejamento({
   perfil,
 usuarioId,
 reabrirRota,
+usuariosPerfis,
+alterarResponsavelRota,
 }) {
   return (
   <div className="painel-planejamento-rota">
@@ -33,6 +35,36 @@ reabrirRota,
         onChange={(e) => setBuscaClienteRota(e.target.value)}
       />
     </div>
+
+{perfil?.tipo_perfil === "admin" && (
+  <div className="painel-responsavel-rota">
+
+    <label>Responsável pela rota</label>
+
+    <select
+      value={rotaSelecionada.usuario_responsavel || ""}
+      onChange={(e) =>
+  alterarResponsavelRota(
+    rotaSelecionada,
+    e.target.value
+  )
+}
+      className="select-responsavel-planejamento"
+    >
+      {usuariosPerfis
+        .filter((usuario) => usuario.ativo)
+        .map((usuario) => (
+          <option
+            key={usuario.user_id}
+            value={usuario.user_id}
+          >
+            {usuario.nome} ({usuario.tipo_perfil})
+          </option>
+        ))}
+    </select>
+
+  </div>
+)}
 
     <div className="planejamento-acoes-principais">
 
@@ -134,8 +166,11 @@ reabrirRota,
                     className="input-sequencia-mini"
                     value={item.sequencia || ""}
                     onFocus={(e) => e.target.select()}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) =>
+                      
                       alterarSequenciaClienteRota(item, e.target.value)
+                      
                     }
                   />
                 ) : (

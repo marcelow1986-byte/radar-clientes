@@ -7,17 +7,15 @@ import {
   MessageCircle,
   Navigation,
   Trash2,
-  CheckCircle,
-Lock,
-ArrowUpDown,
-ClipboardList,
-Wrench
+  CheckCircle
 } from "lucide-react";
 import RotasLista from "./RotasLista.jsx";
 import RotasTopoDetalhe from "./RotasTopoDetalhe.jsx";
 import RotasOperacao from "./RotasOperacao.jsx";
 import RotasManutencao from "./RotasManutencao.jsx";
 import RotasPlanejamento from "./RotasPlanejamento.jsx";
+import RotasBarraAcoes from "./RotasBarraAcoes.jsx";
+
 
 function Rotas({
   rotas,
@@ -46,6 +44,14 @@ perfil,
 usuarioId,
 abrirAcompanhamento,
 ordenarRotaPorDistancia,
+usuariosPerfis,
+usuarioResponsavelRota,
+setUsuarioResponsavelRota,
+filtroResponsavelRotas,
+setFiltroResponsavelRotas,
+alterarResponsavelRota,
+filtroStatusRotas,
+setFiltroStatusRotas,
 }) {
   const [modoReordenar, setModoReordenar] = useState(false);
 const clienteAtual = clientesDaRota.find(
@@ -106,8 +112,16 @@ const percentualConcluido =
   abrirRota={abrirRota}
   abrirRotaCompleta={abrirRotaCompleta}
   excluirRota={excluirRota}
+  perfil={perfil}
+usuariosPerfis={usuariosPerfis}
+usuarioResponsavelRota={usuarioResponsavelRota}
+setUsuarioResponsavelRota={setUsuarioResponsavelRota}
   setAbaRota={setAbaRota}
   setModoTelaRota={setModoTelaRota}
+  filtroResponsavelRotas={filtroResponsavelRotas}
+setFiltroResponsavelRotas={setFiltroResponsavelRotas}
+filtroStatusRotas={filtroStatusRotas}
+setFiltroStatusRotas={setFiltroStatusRotas}
 />
       ) : (
         <>
@@ -161,60 +175,17 @@ const percentualConcluido =
             </div>
           )}
 
-          <div className="barra-acoes-rota">
-  <input
-    type="text"
-    className="input-busca-rota"
-    placeholder="Buscar cliente para adicionar..."
-    value={buscaClienteRota}
-    onChange={(e) => setBuscaClienteRota(e.target.value)}
-  />
-
-  {rotaSelecionada.status === "ABERTA" && (
-    <button type="button" onClick={() => fecharRota(rotaSelecionada)}>
-      <Lock size={16} />
-      Fechar rota
-    </button>
-  )}
-
-  {(rotaSelecionada.status === "FECHADA" ||
-    rotaSelecionada.status === "FINALIZADA") && (
-    <button type="button" onClick={() => reabrirRota(rotaSelecionada)}>
-      <Lock size={16} />
-      Reabrir rota
-    </button>
-  )}
-
-  <div className="grupo-botoes-rota">
-    {rotaSelecionada.status !== "FINALIZADA" && (
-  <button
-    type="button"
-    className="btn-rota-acao"
-    onClick={() => setModoReordenar(!modoReordenar)}
-  >
-    <ArrowUpDown size={16} />
-    {modoReordenar ? "Finalizar reordenação" : "Reordenar rota"}
-  </button>
-)}
-    <button
-      type="button"
-      className={abaRota === "operacao" ? "aba-rota ativa" : "aba-rota"}
-      onClick={() => setAbaRota("operacao")}
-    >
-      <ClipboardList size={16} />
-      Operação
-    </button>
-
-    <button
-      type="button"
-      className={abaRota === "manutencao" ? "aba-rota ativa" : "aba-rota"}
-      onClick={() => setAbaRota("manutencao")}
-    >
-      <Wrench size={16} />
-      Manutenção
-    </button>
-  </div>
-</div>
+          <RotasBarraAcoes
+  rotaSelecionada={rotaSelecionada}
+  buscaClienteRota={buscaClienteRota}
+  setBuscaClienteRota={setBuscaClienteRota}
+  fecharRota={fecharRota}
+  reabrirRota={reabrirRota}
+  modoReordenar={modoReordenar}
+  setModoReordenar={setModoReordenar}
+  abaRota={abaRota}
+  setAbaRota={setAbaRota}
+/>
 
 {abaRota === "operacao" && (
   <RotasOperacao
@@ -279,6 +250,8 @@ const percentualConcluido =
 perfil={perfil}
 usuarioId={usuarioId}
 ordenarRotaPorDistancia={ordenarRotaPorDistancia}
+usuariosPerfis={usuariosPerfis}
+alterarResponsavelRota={alterarResponsavelRota}
   />
 )}
 
