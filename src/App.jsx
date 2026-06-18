@@ -28,25 +28,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-const TELAS_PERSISTIDAS = new Set([
-  "home",
-  "clientes",
-  "proximos",
-  "rotas",
-  "dashboard",
-  "alterarSenha",
-  "admin",
-]);
-
-const TELA_ATUAL_STORAGE_KEY = "radarClientes:telaAtual";
-const ROTA_SELECIONADA_STORAGE_KEY = "radarClientes:rotaSelecionadaId";
-
-function carregarTelaSalva() {
-  const telaSalva = window.localStorage.getItem(TELA_ATUAL_STORAGE_KEY);
-
-  return TELAS_PERSISTIDAS.has(telaSalva) ? telaSalva : "home";
-}
-
 function App() {
   const [session, setSession] = useState(null);
   const [perfil, setPerfil] = useState(null);
@@ -69,7 +50,7 @@ const [alterandoSenhaInterna, setAlterandoSenhaInterna] = useState(false);
   const [clienteVisita, setClienteVisita] = useState(null);
   const [observacaoVisita, setObservacaoVisita] = useState("");
   const [gravandoVisita, setGravandoVisita] = useState(false);
-  const [telaAtual, setTelaAtual] = useState(carregarTelaSalva);
+  const [telaAtual, setTelaAtual] = useState("home");
   const [clientesDaRota, setClientesDaRota] = useState([]);
   const [buscaClienteRota, setBuscaClienteRota] = useState("");
   const [rotas, setRotas] = useState([]);
@@ -172,9 +153,7 @@ if (
 
   if (sessionAtual?.user) {
     if (!estaEmRecuperacao) {
-      if (!window.localStorage.getItem(TELA_ATUAL_STORAGE_KEY)) {
-        setTelaAtual("home");
-      }
+      setTelaAtual("home");
     }
 
     setRotaSelecionada(null);
@@ -193,9 +172,7 @@ if (
     setClientesDaRota([]);
 
     if (!estaEmRecuperacao) {
-      if (!window.localStorage.getItem(TELA_ATUAL_STORAGE_KEY)) {
-        setTelaAtual("home");
-      }
+      setTelaAtual("home");
     }
   }
 });
@@ -212,37 +189,6 @@ useEffect(() => {
 
   return () => clearTimeout(timer);
 }, [textoCidadeBusca, ultimaCidadeBuscada]);
-
-useEffect(() => {
-  window.localStorage.setItem(TELA_ATUAL_STORAGE_KEY, telaAtual);
-}, [telaAtual]);
-
-useEffect(() => {
-  if (rotaSelecionada?.id) {
-    window.localStorage.setItem(
-      ROTA_SELECIONADA_STORAGE_KEY,
-      String(rotaSelecionada.id),
-    );
-  }
-}, [rotaSelecionada]);
-
-useEffect(() => {
-  if (telaAtual !== "rotas" || rotaSelecionada || rotas.length === 0) {
-    return;
-  }
-
-  const rotaSalvaId = window.localStorage.getItem(ROTA_SELECIONADA_STORAGE_KEY);
-
-  if (!rotaSalvaId) {
-    return;
-  }
-
-  const rotaSalva = rotas.find((rota) => String(rota.id) === rotaSalvaId);
-
-  if (rotaSalva) {
-    abrirRota(rotaSalva);
-  }
-}, [telaAtual, rotaSelecionada, rotas]);
 
   async function iniciarSessao() {
     const { data } = await supabase.auth.getSession();
@@ -388,8 +334,6 @@ async function alterarSenhaInterna() {
   setNomeNovaRota("");
 
   setTelaAtual("home");
-  window.localStorage.removeItem(TELA_ATUAL_STORAGE_KEY);
-  window.localStorage.removeItem(ROTA_SELECIONADA_STORAGE_KEY);
 
   setModoProximos(false);
 
@@ -1334,14 +1278,9 @@ async function alterarResponsavelRota(rota, novoResponsavel) {
       setRotaSelecionada(null);
       setClientesDaRota([]);
       setClientesProximosAtivo(true);
-      window.localStorage.removeItem(ROTA_SELECIONADA_STORAGE_KEY);
       return;
     }
     setRotaSelecionada(rota);
-    window.localStorage.setItem(
-      ROTA_SELECIONADA_STORAGE_KEY,
-      String(rota.id),
-    );
 
     const { data, error } = await supabase
       .from("rota_clientes")
